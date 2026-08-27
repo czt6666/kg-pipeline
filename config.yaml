@@ -1,0 +1,35 @@
+llm:
+  base_url_env: SHEEPWALL_BASE_URL
+  api_key_env: SHEEPWALL_API_KEY
+  model_env: SHEEPWALL_MODEL
+  embedding_model_env: SHEEPWALL_EMBEDDING_MODEL
+  temperature: 0
+  max_output_tokens: 4096
+  max_retries: 5
+  retry_base_delay_s: 2.0
+  retry_max_delay_s: 30.0
+  request_timeout_s: 120
+
+extraction:
+  max_input_tokens: 3500
+  chunk_overlap: 0.1
+  fewshot_count: 3
+
+alignment:
+  normalize_lowercase_english_only: true
+  embedding_merge_threshold: 0.93
+
+retrieval:
+  bfs_hops: 2
+  bfs_node_budget: 500
+  top_k: 10
+
+datasets:
+  docred:
+    schema_path: schema/docred_schema.yaml
+    relation_coverage_threshold: 0.95
+  genwiki:
+    schema_path: schema/genwiki_schema.yaml
+    relation_coverage_threshold: 0.90
+  TCM:
+    schema_path: schema/tcm_schema.yaml

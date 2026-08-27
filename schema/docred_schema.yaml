@@ -1,0 +1,1027 @@
+dataset: docred
+entity_types:
+- LOC
+- MISC
+- NUM
+- ORG
+- PER
+- TIME
+relations:
+- name: head of government
+  pid: P6
+  kind: relational
+  domain:
+  - LOC
+  range:
+  - PER
+  description: head of the executive power of this town, city, municipality, state,
+    country, or other governmental body
+- name: country
+  pid: P17
+  kind: relational
+  domain:
+  - LOC
+  - MISC
+  - ORG
+  range:
+  - LOC
+  description: sovereign state that this subject item is in (not to be used for human
+    beings)
+- name: place of birth
+  pid: P19
+  kind: relational
+  domain:
+  - PER
+  range:
+  - LOC
+  description: most specific known birth location of a person, animal or fictional
+    character
+- name: place of death
+  pid: P20
+  kind: relational
+  domain:
+  - PER
+  range:
+  - LOC
+  description: most specific known (e.g. city instead of country, or hospital instead
+    of city) death location of a person, animal or fictional character
+- name: father
+  pid: P22
+  kind: relational
+  domain:
+  - PER
+  range:
+  - PER
+  description: male parent of the subject. For stepfather, use "stepparent" (P3448)
+- name: mother
+  pid: P25
+  kind: relational
+  domain:
+  - MISC
+  - PER
+  range:
+  - MISC
+  - PER
+  description: female parent of the subject. For stepmother, use "stepparent" (P3448)
+- name: spouse
+  pid: P26
+  kind: relational
+  domain:
+  - PER
+  range:
+  - PER
+  description: the subject has the object as their spouse (husband, wife, partner,
+    etc.). Use "unmarried partner" (P451) for non-married companions
+- name: country of citizenship
+  pid: P27
+  kind: relational
+  domain:
+  - PER
+  range:
+  - LOC
+  description: the object is a country that recognizes the subject as its citizen
+- name: continent
+  pid: P30
+  kind: relational
+  domain:
+  - LOC
+  range:
+  - LOC
+  description: continent of which the subject is a part
+- name: instance of
+  pid: P31
+  kind: relational
+  domain:
+  - LOC
+  - MISC
+  - ORG
+  range:
+  - LOC
+  - MISC
+  - ORG
+  description: 'type to which this subject corresponds/belongs. Different from P279
+    (subclass of); for example: K2 is an instance of mountain; volcano is a subclass
+    of mountain'
+- name: head of state
+  pid: P35
+  kind: relational
+  domain:
+  - LOC
+  range:
+  - PER
+  description: official with the highest formal authority in a country/state
+- name: capital
+  pid: P36
+  kind: relational
+  domain:
+  - LOC
+  range:
+  - LOC
+  description: seat of government of a country, province, state or other type of administrative
+    territorial entity
+- name: official language
+  pid: P37
+  kind: relational
+  domain:
+  - LOC
+  - MISC
+  - ORG
+  range:
+  - LOC
+  - MISC
+  description: language designated as official by this item
+- name: position held
+  pid: P39
+  kind: relational
+  domain:
+  - PER
+  range:
+  - LOC
+  - MISC
+  - ORG
+  description: subject currently or formerly holds the object position or public office
+- name: child
+  pid: P40
+  kind: relational
+  domain:
+  - LOC
+  - PER
+  range:
+  - PER
+  description: subject has object as child. Do not use for stepchildren—use "relative"
+    (P1038), qualified with "kinship to subject" (P1039)
+- name: author
+  pid: P50
+  kind: relational
+  domain:
+  - MISC
+  - PER
+  range:
+  - PER
+  description: main creator(s) of a written work (use on works, not humans); use P2093
+    (author name string) when Wikidata item is unknown or does not exist
+- name: member of sports team
+  pid: P54
+  kind: relational
+  domain:
+  - PER
+  range:
+  - LOC
+  - ORG
+  description: sports teams or clubs that the subject represents or represented
+- name: director
+  pid: P57
+  kind: relational
+  domain:
+  - MISC
+  range:
+  - PER
+  description: director(s) of film, TV-series, stageplay, video game or similar
+- name: screenwriter
+  pid: P58
+  kind: relational
+  domain:
+  - MISC
+  range:
+  - PER
+  description: person(s) who wrote the script for subject item
+- name: educated at
+  pid: P69
+  kind: relational
+  domain:
+  - PER
+  range:
+  - ORG
+  description: educational institution attended by subject
+- name: composer
+  pid: P86
+  kind: relational
+  domain:
+  - MISC
+  range:
+  - PER
+  description: person(s) who wrote the music [for lyricist, use "lyrics by" (P676)]
+- name: member of political party
+  pid: P102
+  kind: relational
+  domain:
+  - PER
+  range:
+  - ORG
+  description: the political party of which a person is or has been a member or otherwise
+    affiliated
+- name: employer
+  pid: P108
+  kind: relational
+  domain:
+  - PER
+  range:
+  - ORG
+  description: person or organization for which the subject works or worked
+- name: founded by
+  pid: P112
+  kind: relational
+  domain:
+  - LOC
+  - MISC
+  - ORG
+  - PER
+  range:
+  - MISC
+  - ORG
+  - PER
+  description: founder or co-founder of this organization, religion, place or entity
+- name: league
+  pid: P118
+  kind: relational
+  domain:
+  - LOC
+  - ORG
+  range:
+  - MISC
+  - ORG
+  description: league or competition in which team or player has played, or in which
+    an event occurs
+- name: publisher
+  pid: P123
+  kind: relational
+  domain:
+  - MISC
+  - ORG
+  - PER
+  range:
+  - ORG
+  - PER
+  description: organization or person responsible for publishing a work, such as a
+    book, periodical, printed music, podcast, game or software
+- name: owned by
+  pid: P127
+  kind: relational
+  domain:
+  - LOC
+  - MISC
+  - ORG
+  range:
+  - LOC
+  - ORG
+  - PER
+  description: owner of the subject
+- name: located in the administrative territorial entity
+  pid: P131
+  kind: relational
+  domain:
+  - LOC
+  - ORG
+  range:
+  - LOC
+  description: the item is located on the territory of the following administrative
+    entity. Use P276 for specifying locations that are non-administrative places and
+    for items about events. Use P1382 if the item falls only partially into the administrative
+    entity
+- name: genre
+  pid: P136
+  kind: relational
+  domain:
+  - MISC
+  - ORG
+  - PER
+  range:
+  - LOC
+  - MISC
+  - ORG
+  description: creative work's genre or an artist's field of work (P101). Use main
+    subject (P921) to relate creative works to their topic
+- name: operator
+  pid: P137
+  kind: relational
+  domain:
+  - LOC
+  - MISC
+  - ORG
+  range:
+  - ORG
+  description: person, profession, organization or entity that operates the equipment,
+    facility, or service
+- name: religion
+  pid: P140
+  kind: relational
+  domain:
+  - LOC
+  - ORG
+  - PER
+  range:
+  - LOC
+  - ORG
+  description: religion of a person, organization or religious building, or associated
+    with this subject
+- name: contains administrative territorial entity
+  pid: P150
+  kind: relational
+  domain:
+  - LOC
+  range:
+  - LOC
+  description: (list of) direct subdivisions of an administrative territorial entity
+- name: follows
+  pid: P155
+  kind: relational
+  domain:
+  - LOC
+  - MISC
+  - ORG
+  - TIME
+  range:
+  - LOC
+  - MISC
+  - ORG
+  - TIME
+  description: immediately prior item in a series of which the subject is a part,
+    preferably use as qualifier of P179 [if the subject has replaced the preceding
+    item, e.g. political offices, use "replaces" (P1365)]
+- name: followed by
+  pid: P156
+  kind: relational
+  domain:
+  - LOC
+  - MISC
+  - ORG
+  range:
+  - LOC
+  - MISC
+  - ORG
+  description: immediately following item in a series of which the subject is a part,
+    preferably use as qualifier of P179 [if the subject has been replaced, e.g. political
+    offices, use "replaced by" (P1366)]
+- name: headquarters location
+  pid: P159
+  kind: relational
+  domain:
+  - LOC
+  - MISC
+  - ORG
+  range:
+  - LOC
+  description: city or town where an organization's headquarters is or has been situated.
+    Use P276 qualifier for specific building
+- name: cast member
+  pid: P161
+  kind: relational
+  domain:
+  - MISC
+  range:
+  - PER
+  description: actor in the subject production [use "character role" (P453) and/or
+    "name of the character role" (P4633) as qualifiers] [use "voice actor" (P725)
+    for voice-only role] - [use "recorded participant" (P11108) for non-fiction productions]
+- name: producer
+  pid: P162
+  kind: relational
+  domain:
+  - MISC
+  - ORG
+  range:
+  - ORG
+  - PER
+  description: person(s) who produced the film, musical work, theatrical production,
+    etc. (for film, this does not include executive producers, associate producers,
+    etc.) [for production company, use P272, video games - use P178]
+- name: award received
+  pid: P166
+  kind: relational
+  domain:
+  - MISC
+  - PER
+  range:
+  - MISC
+  - ORG
+  description: award or recognition received by a person, organization or creative
+    work
+- name: creator
+  pid: P170
+  kind: relational
+  domain:
+  - LOC
+  - MISC
+  - PER
+  range:
+  - ORG
+  - PER
+  description: maker of this creative work or other object (where no more specific
+    property exists)
+- name: parent taxon
+  pid: P171
+  kind: relational
+  domain:
+  - LOC
+  - MISC
+  range:
+  - LOC
+  - MISC
+  description: closest parent taxon of the taxon in question
+- name: ethnic group
+  pid: P172
+  kind: relational
+  domain:
+  - LOC
+  - PER
+  range:
+  - LOC
+  - MISC
+  - ORG
+  description: subject's ethnicity (consensus is that a VERY high standard of proof
+    is needed for this field to be used. In general this means 1) the subject claims
+    it themselves, or 2) it is widely agreed on by scholars, or 3) is fictional and
+    portrayed as such)
+- name: performer
+  pid: P175
+  kind: relational
+  domain:
+  - MISC
+  - PER
+  range:
+  - ORG
+  - PER
+  description: actor, musician, band or other performer associated with this role
+    or musical work
+- name: manufacturer
+  pid: P176
+  kind: relational
+  domain:
+  - MISC
+  range:
+  - LOC
+  - ORG
+  description: (main or final) manufacturer or producer of this product
+- name: developer
+  pid: P178
+  kind: relational
+  domain:
+  - MISC
+  range:
+  - ORG
+  - PER
+  description: organization or person that developed the item
+- name: series
+  pid: P179
+  kind: relational
+  domain:
+  - MISC
+  range:
+  - MISC
+  - PER
+  description: series which contains the subject
+- name: sister city
+  pid: P190
+  kind: relational
+  domain:
+  - LOC
+  range:
+  - LOC
+  description: twin towns, sister cities, twinned municipalities and other localities
+    that have a partnership or cooperative agreement, either legally or informally
+    acknowledged by their governments
+- name: legislative body
+  pid: P194
+  kind: relational
+  domain:
+  - LOC
+  range:
+  - MISC
+  - ORG
+  description: legislative body governing this entity; political institution with
+    elected representatives, such as a parliament/legislature or council
+- name: basin country
+  pid: P205
+  kind: relational
+  domain:
+  - LOC
+  range:
+  - LOC
+  description: country that have drainage to/from or border the body of water
+- name: located in or next to body of water
+  pid: P206
+  kind: relational
+  domain:
+  - LOC
+  range:
+  - LOC
+  description: body of water on or next to which a place is located
+- name: military branch
+  pid: P241
+  kind: relational
+  domain:
+  - ORG
+  - PER
+  range:
+  - LOC
+  - ORG
+  description: branch to which this military unit, award, office, or person belongs,
+    e.g. Royal Navy
+- name: record label
+  pid: P264
+  kind: relational
+  domain:
+  - MISC
+  - ORG
+  - PER
+  range:
+  - ORG
+  description: brand and trademark associated with the marketing of subject music
+    recordings and music videos
+- name: production company
+  pid: P272
+  kind: relational
+  domain:
+  - MISC
+  - PER
+  range:
+  - ORG
+  description: company that produced this film, audio or performing arts work
+- name: location
+  pid: P276
+  kind: relational
+  domain:
+  - LOC
+  - MISC
+  - ORG
+  range:
+  - LOC
+  description: location of the object, structure or event; use P131 to indicate the
+    containing administrative entity, P8138 for statistical entities, or P706 for
+    geographic entities; use P7153 for locations associated with the object
+- name: subclass of
+  pid: P279
+  kind: relational
+  domain:
+  - LOC
+  - MISC
+  - ORG
+  range:
+  - LOC
+  - MISC
+  - NUM
+  - ORG
+  description: 'this item is a subclass (subset) of that item; ALL instances of this
+    item are instances of that item; different from P31 (instance of), e.g.: volcano
+    is a subclass of mountain; Everest is an instance of mountain'
+- name: subsidiary
+  pid: P355
+  kind: relational
+  domain:
+  - ORG
+  range:
+  - LOC
+  - MISC
+  - ORG
+  description: child organization/unit of an org./unit; usually a fully owned separate
+    org.; for non-independent sub-units, see org. division (P199); opposite of parent
+    org./unit (P749); use instance of (P31) to distinguish org. (Q43229) and org.
+    unit (Q10387680)
+- name: part of
+  pid: P361
+  kind: relational
+  domain:
+  - LOC
+  - MISC
+  - ORG
+  - PER
+  range:
+  - LOC
+  - MISC
+  - ORG
+  description: object of which the subject is a part (if this subject is already part
+    of object A which is a part of object B, then please only make the subject part
+    of object A), inverse property of "has part" (P527, see also "has parts of the
+    class" (P2670))
+- name: original language of work
+  pid: P364
+  kind: relational
+  domain:
+  - LOC
+  - MISC
+  - PER
+  range:
+  - LOC
+  - MISC
+  description: language in which a film or a performance work was originally created.
+    Deprecated for written works and songs; use P407 ("language of work or name")
+    instead.
+- name: platform
+  pid: P400
+  kind: relational
+  domain:
+  - MISC
+  - PER
+  range:
+  - MISC
+  description: platform for which a work was developed or released, or the specific
+    platform version of a software product
+- name: mouth of the watercourse
+  pid: P403
+  kind: relational
+  domain:
+  - LOC
+  range:
+  - LOC
+  description: the body of water to which the watercourse drains
+- name: original network
+  pid: P449
+  kind: relational
+  domain:
+  - MISC
+  - PER
+  range:
+  - MISC
+  - ORG
+  description: network(s) or service(s) that originally broadcast a radio or television
+    program
+- name: member of
+  pid: P463
+  kind: relational
+  domain:
+  - LOC
+  - ORG
+  - PER
+  range:
+  - LOC
+  - ORG
+  description: organization, club or musical group to which the subject belongs. Do
+    not use for membership in ethnic or social groups, nor for holding a political
+    position, such as a member of parliament (use P39 for that)
+- name: chairperson
+  pid: P488
+  kind: relational
+  domain:
+  - ORG
+  range:
+  - PER
+  description: presiding member of an organization, group or body
+- name: country of origin
+  pid: P495
+  kind: relational
+  domain:
+  - LOC
+  - MISC
+  - ORG
+  range:
+  - LOC
+  description: country of origin of this item (creative work, food, phrase, product,
+    etc.)
+- name: has part
+  pid: P527
+  kind: relational
+  domain:
+  - LOC
+  - MISC
+  - ORG
+  range:
+  - LOC
+  - MISC
+  - ORG
+  - PER
+  description: part of this subject; inverse property of "part of" (P361). See also
+    "has parts of the class" (P2670).
+- name: residence
+  pid: P551
+  kind: relational
+  domain:
+  - PER
+  range:
+  - LOC
+  - ORG
+  description: the place where the person is or has been, resident
+- name: date of birth
+  pid: P569
+  kind: intrinsic
+  domain:
+  - PER
+  range:
+  - TIME
+  description: date on which the subject was born
+- name: date of death
+  pid: P570
+  kind: intrinsic
+  domain:
+  - PER
+  range:
+  - TIME
+  description: date on which the subject died
+- name: inception
+  pid: P571
+  kind: intrinsic
+  domain:
+  - LOC
+  - MISC
+  - ORG
+  range:
+  - TIME
+  description: time when an entity begins to exist; for date of official opening use
+    P1619
+- name: dissolved, abolished or demolished
+  pid: P576
+  kind: intrinsic
+  domain:
+  - LOC
+  - MISC
+  - ORG
+  range:
+  - TIME
+  description: point in time at which the subject (organisation, building) ceased
+    to exist; see "date of official closure" (P3999) for closing a facility, "service
+    retirement" (P730) for retiring equipment, "discontinued date" (P2669) for stopping
+    a product
+- name: publication date
+  pid: P577
+  kind: intrinsic
+  domain:
+  - MISC
+  range:
+  - TIME
+  description: date or point in time when a work or product was first published or
+    released
+- name: start time
+  pid: P580
+  kind: intrinsic
+  domain:
+  - MISC
+  - ORG
+  range:
+  - TIME
+  description: time an entity begins to exist or a statement starts being valid
+- name: end time
+  pid: P582
+  kind: intrinsic
+  domain:
+  - MISC
+  - ORG
+  range:
+  - TIME
+  description: moment when an entity ceases to exist and a statement stops being entirely
+    valid or no longer be true
+- name: point in time
+  pid: P585
+  kind: intrinsic
+  domain:
+  - LOC
+  - MISC
+  range:
+  - TIME
+  description: date something took place, existed or a statement was true; for providing
+    time use the "refine date" property (P4241)
+- name: conflict
+  pid: P607
+  kind: relational
+  domain:
+  - LOC
+  - MISC
+  - ORG
+  - PER
+  range:
+  - MISC
+  description: battles, wars or other military engagements in which the person or
+    item participated
+- name: characters
+  pid: P674
+  kind: relational
+  domain:
+  - LOC
+  - MISC
+  - PER
+  range:
+  - MISC
+  - PER
+  description: characters which appear in this item (like plays, operas, operettas,
+    books, comics, films, TV series, video games)
+- name: lyrics by
+  pid: P676
+  kind: relational
+  domain:
+  - MISC
+  range:
+  - PER
+  description: author of song lyrics
+- name: located on terrain feature
+  pid: P706
+  kind: relational
+  domain:
+  - LOC
+  - MISC
+  range:
+  - LOC
+  description: located on the specified (geo)physical feature. Should not be used
+    when the value is only political/administrative (P131) or a mountain range (P4552).
+    Use P206 for things in/on bodies of water.
+- name: participant
+  pid: P710
+  kind: relational
+  domain:
+  - LOC
+  - MISC
+  range:
+  - LOC
+  - MISC
+  - ORG
+  - PER
+  description: person, group of people or organization (object) that actively takes/took
+    part in an event or process (subject). Preferably qualify with "object has role"
+    (P3831). Use P1923 for participants that are teams.
+- name: influenced by
+  pid: P737
+  kind: relational
+  domain:
+  - MISC
+  - ORG
+  - PER
+  range:
+  - MISC
+  - ORG
+  - PER
+  description: the subject (person, idea, etc.) was influenced or inspired by this
+    object entity, e.g. "Heidegger was influenced by Aristotle"
+- name: location of formation
+  pid: P740
+  kind: relational
+  domain:
+  - MISC
+  - ORG
+  - PER
+  range:
+  - LOC
+  description: location where a group or organization was formed
+- name: parent organization
+  pid: P749
+  kind: relational
+  domain:
+  - MISC
+  - ORG
+  range:
+  - ORG
+  - PER
+  description: parent organization or unit of an organization or unit, opposite of
+    child organization or unit (P355); use instance of (P31) to distinguish organization
+    (Q43229) and organization unit (Q10387680)
+- name: notable work
+  pid: P800
+  kind: relational
+  domain:
+  - PER
+  range:
+  - LOC
+  - MISC
+  description: notable scientific, artistic or literary work, or other work of significance
+    among subject's works
+- name: separated from
+  pid: P807
+  kind: relational
+  domain:
+  - LOC
+  - ORG
+  range:
+  - LOC
+  - ORG
+  description: subject was founded or started by separating from identified object
+- name: narrative location
+  pid: P840
+  kind: relational
+  domain:
+  - LOC
+  - MISC
+  - ORG
+  - PER
+  range:
+  - LOC
+  description: the narrative of the work is set in this location
+- name: work location
+  pid: P937
+  kind: relational
+  domain:
+  - PER
+  range:
+  - LOC
+  - ORG
+  description: location where persons or organisations were actively participating
+    in employment, business or other work
+- name: applies to jurisdiction
+  pid: P1001
+  kind: relational
+  domain:
+  - MISC
+  - ORG
+  range:
+  - LOC
+  - ORG
+  description: 'the item (institution, law, public office, public register, etc) or
+    statement belongs to or has power over or applies to the value (a territorial
+    jurisdiction: a country, state, municipality, etc)'
+- name: product or material produced
+  pid: P1056
+  kind: relational
+  domain:
+  - ORG
+  range:
+  - MISC
+  - ORG
+  description: material or product, including services, produced or provided by an
+    organization, industry, facility, or process
+- name: unemployment rate
+  pid: P1198
+  kind: intrinsic
+  domain:
+  - LOC
+  range:
+  - NUM
+  - TIME
+  description: portion of a workforce population that is not employed
+- name: territory claimed by
+  pid: P1336
+  kind: relational
+  domain:
+  - LOC
+  range:
+  - LOC
+  - MISC
+  description: administrative divisions that claim control of a given area
+- name: participant of
+  pid: P1344
+  kind: relational
+  domain:
+  - LOC
+  - ORG
+  - PER
+  range:
+  - MISC
+  description: event in which a person, organization or creative work was/is a participant;
+    inverse of P710 or P1923
+- name: replaces
+  pid: P1365
+  kind: relational
+  domain:
+  - LOC
+  - MISC
+  - ORG
+  range:
+  - LOC
+  - MISC
+  - ORG
+  description: person, state or item replaced. Use "structure replaces" (P1398) for
+    structures. Use "follows" (P155) if the previous item was not replaced or predecessor
+    and successor are identical
+- name: replaced by
+  pid: P1366
+  kind: relational
+  domain:
+  - LOC
+  - MISC
+  - ORG
+  range:
+  - LOC
+  - MISC
+  - ORG
+  description: other person or item which continues the item by replacing it in its
+    role. Use P156 ("followed by") if the item is not replaced nor identical, but
+    adds to the series (e.g. books in a series).
+- name: capital of
+  pid: P1376
+  kind: relational
+  domain:
+  - LOC
+  range:
+  - LOC
+  description: country, state, department, canton or other administrative division
+    of which the municipality is the governmental seat
+- name: languages spoken, written or signed
+  pid: P1412
+  kind: relational
+  domain:
+  - LOC
+  - PER
+  range:
+  - LOC
+  - MISC
+  description: language(s) that a person or a people speaks, writes or signs, including
+    the native language(s)
+- name: present in work
+  pid: P1441
+  kind: relational
+  domain:
+  - LOC
+  - MISC
+  - ORG
+  - PER
+  range:
+  - MISC
+  description: this (fictional or fictionalized) entity, place, or person appears
+    in that work as part of the narration (use P2860 for works citing other works,
+    P361/P1433 for works being part of other works, P1343 for entities described in
+    non-fictional accounts)
+- name: sibling
+  pid: P3373
+  kind: relational
+  domain:
+  - PER
+  range:
+  - PER
+  description: the subject and the object have at least one common parent (brother,
+    sister, etc. including half-siblings); use "relative" (P1038) for siblings-in-law
+    (brother-in-law, sister-in-law, etc.) and step-siblings (step-brothers, step-sisters,
+    etc.)

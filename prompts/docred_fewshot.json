@@ -1,0 +1,290 @@
+[
+  {
+    "text": "Howard H. Stevenson ( June 27 , 1941 ) is the Sarofim - Rock Baker Foundation Professor Emeritus at Harvard University . Forbes magazine described him as Harvard Business School 's \" lion of entrepreneurship \" in a 2011 article . Howard is credited with defining entrepreneurship as “ the pursuit of opportunity beyond the resources you currently control . ” INC Magazine described Howard 's definition of entrepreneurship as \" the best answer ever . \" Stevenson is the author of eight books and 41 articles . His past roles at Harvard include chairman of Harvard Business Publishing , vice provost for resources and planning , and senior associate dean at HBS . He is often credited as being the most successful fundraiser in the history of Harvard University , raising over $ 600 million in philanthropic support for initiatives in business , science , healthcare , and student life . He graduated from Stanford University and Harvard Business School .",
+    "output": {
+      "entities": [
+        {
+          "id": "e1",
+          "name": "Howard H. Stevenson",
+          "type": "PER",
+          "mentions": [
+            "Howard H. Stevenson",
+            "Howard",
+            "Stevenson"
+          ]
+        },
+        {
+          "id": "e2",
+          "name": "Sarofim - Rock Baker Foundation",
+          "type": "ORG",
+          "mentions": [
+            "Sarofim - Rock Baker Foundation"
+          ]
+        },
+        {
+          "id": "e3",
+          "name": "Harvard University",
+          "type": "ORG",
+          "mentions": [
+            "Harvard University",
+            "Harvard"
+          ]
+        },
+        {
+          "id": "e4",
+          "name": "Harvard Business School",
+          "type": "ORG",
+          "mentions": [
+            "Harvard Business School",
+            "HBS"
+          ]
+        },
+        {
+          "id": "e5",
+          "name": "June 27 , 1941",
+          "type": "TIME",
+          "mentions": [
+            "June 27 , 1941"
+          ]
+        },
+        {
+          "id": "e6",
+          "name": "Stanford University",
+          "type": "ORG",
+          "mentions": [
+            "Stanford University"
+          ]
+        }
+      ],
+      "triples": [
+        {
+          "head": "e1",
+          "relation": "date of birth",
+          "tail": "e5"
+        },
+        {
+          "head": "e1",
+          "relation": "employer",
+          "tail": "e3"
+        },
+        {
+          "head": "e1",
+          "relation": "educated at",
+          "tail": "e4"
+        },
+        {
+          "head": "e3",
+          "relation": "subsidiary",
+          "tail": "e4"
+        },
+        {
+          "head": "e4",
+          "relation": "parent organization",
+          "tail": "e3"
+        }
+      ]
+    }
+  },
+  {
+    "text": "Reading is a popular pastime in North Korea , where literacy and books enjoy a high cultural standing , elevated by the regime 's efforts to disseminate propaganda as texts . Because of this , writers are held in high prestige . The partition of Korea following the Second World War led to a considerable cross - border movement , which included writers moving from North to South or from South to North . North Korea 's subsequent literary tradition was shaped and controlled by the State . The \" Guidelines for Juche Literature \" , published by the official Choson Writers ' Alliance ( ) , emphasised that literature must extoll the country 's leader , Kim Il - sung , and , later , Kim Jong - il . Only members of the Writers ' Alliance are authorised to have their works published .",
+    "output": {
+      "entities": [
+        {
+          "id": "e1",
+          "name": "North Korea",
+          "type": "LOC",
+          "mentions": [
+            "North Korea",
+            "North",
+            "State"
+          ]
+        },
+        {
+          "id": "e2",
+          "name": "Korea",
+          "type": "LOC",
+          "mentions": [
+            "Korea"
+          ]
+        },
+        {
+          "id": "e3",
+          "name": "Second World War",
+          "type": "MISC",
+          "mentions": [
+            "Second World War"
+          ]
+        },
+        {
+          "id": "e4",
+          "name": "South",
+          "type": "LOC",
+          "mentions": [
+            "South"
+          ]
+        },
+        {
+          "id": "e5",
+          "name": "Guidelines for Juche Literature",
+          "type": "MISC",
+          "mentions": [
+            "Guidelines for Juche Literature"
+          ]
+        },
+        {
+          "id": "e6",
+          "name": "Choson Writers ' Alliance",
+          "type": "ORG",
+          "mentions": [
+            "Choson Writers ' Alliance"
+          ]
+        },
+        {
+          "id": "e7",
+          "name": "Kim Il - sung",
+          "type": "PER",
+          "mentions": [
+            "Kim Il - sung"
+          ]
+        },
+        {
+          "id": "e8",
+          "name": "Kim Jong - il",
+          "type": "PER",
+          "mentions": [
+            "Kim Jong - il"
+          ]
+        },
+        {
+          "id": "e9",
+          "name": "Writers ' Alliance",
+          "type": "ORG",
+          "mentions": [
+            "Writers ' Alliance"
+          ]
+        }
+      ],
+      "triples": [
+        {
+          "head": "e7",
+          "relation": "child",
+          "tail": "e8"
+        },
+        {
+          "head": "e8",
+          "relation": "father",
+          "tail": "e7"
+        },
+        {
+          "head": "e1",
+          "relation": "head of state",
+          "tail": "e7"
+        },
+        {
+          "head": "e1",
+          "relation": "head of state",
+          "tail": "e8"
+        }
+      ]
+    }
+  },
+  {
+    "text": "James Brown Humphrey , also known as \" Professor Jim \" Humphrey ( 1859 -1937 ) was a musician , bandleader , and music instructor in New Orleans , Louisiana , United States and central figure in the formation of jazz as a contemporary musical art form . Humphrey predates the jazz genre as an active performer and is not himself considered a jazz musician . However , his involvement in the formal training of large numbers of musicians along the southern plantation belt of the Mississippi River delta during the immediate years following the reconstruction era resulted in many virtuoso performers who would go on to originate jazz as a distinct musical genre . Consequently , he is regarded by some in the jazz aficionado community to be \" the grandfather of jazz \" .",
+    "output": {
+      "entities": [
+        {
+          "id": "e1",
+          "name": "James Brown Humphrey",
+          "type": "PER",
+          "mentions": [
+            "James Brown Humphrey",
+            "\" Professor Jim \" Humphrey",
+            "Humphrey"
+          ]
+        },
+        {
+          "id": "e2",
+          "name": "1859",
+          "type": "TIME",
+          "mentions": [
+            "1859"
+          ]
+        },
+        {
+          "id": "e3",
+          "name": "New Orleans",
+          "type": "LOC",
+          "mentions": [
+            "New Orleans"
+          ]
+        },
+        {
+          "id": "e4",
+          "name": "Louisiana",
+          "type": "LOC",
+          "mentions": [
+            "Louisiana"
+          ]
+        },
+        {
+          "id": "e5",
+          "name": "United States",
+          "type": "LOC",
+          "mentions": [
+            "United States"
+          ]
+        },
+        {
+          "id": "e6",
+          "name": "Mississippi River",
+          "type": "LOC",
+          "mentions": [
+            "Mississippi River"
+          ]
+        }
+      ],
+      "triples": [
+        {
+          "head": "e1",
+          "relation": "country of citizenship",
+          "tail": "e5"
+        },
+        {
+          "head": "e1",
+          "relation": "date of birth",
+          "tail": "e2"
+        },
+        {
+          "head": "e3",
+          "relation": "country",
+          "tail": "e5"
+        },
+        {
+          "head": "e4",
+          "relation": "contains administrative territorial entity",
+          "tail": "e3"
+        },
+        {
+          "head": "e4",
+          "relation": "located in the administrative territorial entity",
+          "tail": "e5"
+        },
+        {
+          "head": "e4",
+          "relation": "country",
+          "tail": "e5"
+        },
+        {
+          "head": "e5",
+          "relation": "contains administrative territorial entity",
+          "tail": "e4"
+        },
+        {
+          "head": "e6",
+          "relation": "country",
+          "tail": "e5"
+        }
+      ]
+    }
+  }
+]

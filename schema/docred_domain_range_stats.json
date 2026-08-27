@@ -1,0 +1,1931 @@
+{
+  "coverage_threshold": 0.95,
+  "literal_types": [
+    "NUM",
+    "TIME"
+  ],
+  "per_relation": {
+    "P6": {
+      "name": "head of government",
+      "total_instances": 210,
+      "coverage_achieved": 0.9714,
+      "covered_pairs": [
+        {
+          "head_type": "LOC",
+          "tail_type": "PER",
+          "count": 204
+        }
+      ]
+    },
+    "P17": {
+      "name": "country",
+      "total_instances": 8921,
+      "coverage_achieved": 0.9826,
+      "covered_pairs": [
+        {
+          "head_type": "LOC",
+          "tail_type": "LOC",
+          "count": 6227
+        },
+        {
+          "head_type": "ORG",
+          "tail_type": "LOC",
+          "count": 1988
+        },
+        {
+          "head_type": "MISC",
+          "tail_type": "LOC",
+          "count": 551
+        }
+      ]
+    },
+    "P19": {
+      "name": "place of birth",
+      "total_instances": 511,
+      "coverage_achieved": 0.9922,
+      "covered_pairs": [
+        {
+          "head_type": "PER",
+          "tail_type": "LOC",
+          "count": 507
+        }
+      ]
+    },
+    "P20": {
+      "name": "place of death",
+      "total_instances": 203,
+      "coverage_achieved": 0.9754,
+      "covered_pairs": [
+        {
+          "head_type": "PER",
+          "tail_type": "LOC",
+          "count": 198
+        }
+      ]
+    },
+    "P22": {
+      "name": "father",
+      "total_instances": 273,
+      "coverage_achieved": 0.956,
+      "covered_pairs": [
+        {
+          "head_type": "PER",
+          "tail_type": "PER",
+          "count": 261
+        }
+      ]
+    },
+    "P25": {
+      "name": "mother",
+      "total_instances": 74,
+      "coverage_achieved": 0.9865,
+      "covered_pairs": [
+        {
+          "head_type": "PER",
+          "tail_type": "PER",
+          "count": 70
+        },
+        {
+          "head_type": "MISC",
+          "tail_type": "MISC",
+          "count": 3
+        }
+      ]
+    },
+    "P26": {
+      "name": "spouse",
+      "total_instances": 303,
+      "coverage_achieved": 0.9802,
+      "covered_pairs": [
+        {
+          "head_type": "PER",
+          "tail_type": "PER",
+          "count": 297
+        }
+      ]
+    },
+    "P27": {
+      "name": "country of citizenship",
+      "total_instances": 2689,
+      "coverage_achieved": 0.9587,
+      "covered_pairs": [
+        {
+          "head_type": "PER",
+          "tail_type": "LOC",
+          "count": 2578
+        }
+      ]
+    },
+    "P30": {
+      "name": "continent",
+      "total_instances": 356,
+      "coverage_achieved": 0.9635,
+      "covered_pairs": [
+        {
+          "head_type": "LOC",
+          "tail_type": "LOC",
+          "count": 343
+        }
+      ]
+    },
+    "P31": {
+      "name": "instance of",
+      "total_instances": 103,
+      "coverage_achieved": 0.9612,
+      "covered_pairs": [
+        {
+          "head_type": "MISC",
+          "tail_type": "MISC",
+          "count": 52
+        },
+        {
+          "head_type": "ORG",
+          "tail_type": "ORG",
+          "count": 25
+        },
+        {
+          "head_type": "LOC",
+          "tail_type": "LOC",
+          "count": 12
+        },
+        {
+          "head_type": "ORG",
+          "tail_type": "MISC",
+          "count": 4
+        },
+        {
+          "head_type": "MISC",
+          "tail_type": "ORG",
+          "count": 3
+        },
+        {
+          "head_type": "LOC",
+          "tail_type": "ORG",
+          "count": 3
+        }
+      ]
+    },
+    "P35": {
+      "name": "head of state",
+      "total_instances": 140,
+      "coverage_achieved": 0.9643,
+      "covered_pairs": [
+        {
+          "head_type": "LOC",
+          "tail_type": "PER",
+          "count": 135
+        }
+      ]
+    },
+    "P36": {
+      "name": "capital",
+      "total_instances": 85,
+      "coverage_achieved": 0.9647,
+      "covered_pairs": [
+        {
+          "head_type": "LOC",
+          "tail_type": "LOC",
+          "count": 82
+        }
+      ]
+    },
+    "P37": {
+      "name": "official language",
+      "total_instances": 119,
+      "coverage_achieved": 0.9748,
+      "covered_pairs": [
+        {
+          "head_type": "LOC",
+          "tail_type": "MISC",
+          "count": 67
+        },
+        {
+          "head_type": "LOC",
+          "tail_type": "LOC",
+          "count": 38
+        },
+        {
+          "head_type": "ORG",
+          "tail_type": "MISC",
+          "count": 7
+        },
+        {
+          "head_type": "MISC",
+          "tail_type": "LOC",
+          "count": 4
+        }
+      ]
+    },
+    "P39": {
+      "name": "position held",
+      "total_instances": 23,
+      "coverage_achieved": 0.9565,
+      "covered_pairs": [
+        {
+          "head_type": "PER",
+          "tail_type": "MISC",
+          "count": 13
+        },
+        {
+          "head_type": "PER",
+          "tail_type": "ORG",
+          "count": 7
+        },
+        {
+          "head_type": "PER",
+          "tail_type": "LOC",
+          "count": 2
+        }
+      ]
+    },
+    "P40": {
+      "name": "child",
+      "total_instances": 360,
+      "coverage_achieved": 0.9667,
+      "covered_pairs": [
+        {
+          "head_type": "PER",
+          "tail_type": "PER",
+          "count": 340
+        },
+        {
+          "head_type": "LOC",
+          "tail_type": "PER",
+          "count": 8
+        }
+      ]
+    },
+    "P50": {
+      "name": "author",
+      "total_instances": 320,
+      "coverage_achieved": 0.9656,
+      "covered_pairs": [
+        {
+          "head_type": "MISC",
+          "tail_type": "PER",
+          "count": 297
+        },
+        {
+          "head_type": "PER",
+          "tail_type": "PER",
+          "count": 12
+        }
+      ]
+    },
+    "P54": {
+      "name": "member of sports team",
+      "total_instances": 379,
+      "coverage_achieved": 0.9604,
+      "covered_pairs": [
+        {
+          "head_type": "PER",
+          "tail_type": "ORG",
+          "count": 348
+        },
+        {
+          "head_type": "PER",
+          "tail_type": "LOC",
+          "count": 16
+        }
+      ]
+    },
+    "P57": {
+      "name": "director",
+      "total_instances": 246,
+      "coverage_achieved": 0.9797,
+      "covered_pairs": [
+        {
+          "head_type": "MISC",
+          "tail_type": "PER",
+          "count": 241
+        }
+      ]
+    },
+    "P58": {
+      "name": "screenwriter",
+      "total_instances": 156,
+      "coverage_achieved": 0.9936,
+      "covered_pairs": [
+        {
+          "head_type": "MISC",
+          "tail_type": "PER",
+          "count": 155
+        }
+      ]
+    },
+    "P69": {
+      "name": "educated at",
+      "total_instances": 316,
+      "coverage_achieved": 0.9715,
+      "covered_pairs": [
+        {
+          "head_type": "PER",
+          "tail_type": "ORG",
+          "count": 307
+        }
+      ]
+    },
+    "P86": {
+      "name": "composer",
+      "total_instances": 79,
+      "coverage_achieved": 0.9747,
+      "covered_pairs": [
+        {
+          "head_type": "MISC",
+          "tail_type": "PER",
+          "count": 77
+        }
+      ]
+    },
+    "P102": {
+      "name": "member of political party",
+      "total_instances": 406,
+      "coverage_achieved": 0.9606,
+      "covered_pairs": [
+        {
+          "head_type": "PER",
+          "tail_type": "ORG",
+          "count": 390
+        }
+      ]
+    },
+    "P108": {
+      "name": "employer",
+      "total_instances": 196,
+      "coverage_achieved": 0.9592,
+      "covered_pairs": [
+        {
+          "head_type": "PER",
+          "tail_type": "ORG",
+          "count": 188
+        }
+      ]
+    },
+    "P112": {
+      "name": "founded by",
+      "total_instances": 100,
+      "coverage_achieved": 0.96,
+      "covered_pairs": [
+        {
+          "head_type": "ORG",
+          "tail_type": "PER",
+          "count": 66
+        },
+        {
+          "head_type": "MISC",
+          "tail_type": "PER",
+          "count": 11
+        },
+        {
+          "head_type": "PER",
+          "tail_type": "MISC",
+          "count": 9
+        },
+        {
+          "head_type": "LOC",
+          "tail_type": "PER",
+          "count": 6
+        },
+        {
+          "head_type": "ORG",
+          "tail_type": "ORG",
+          "count": 4
+        }
+      ]
+    },
+    "P118": {
+      "name": "league",
+      "total_instances": 185,
+      "coverage_achieved": 0.9514,
+      "covered_pairs": [
+        {
+          "head_type": "ORG",
+          "tail_type": "ORG",
+          "count": 149
+        },
+        {
+          "head_type": "ORG",
+          "tail_type": "MISC",
+          "count": 24
+        },
+        {
+          "head_type": "LOC",
+          "tail_type": "ORG",
+          "count": 3
+        }
+      ]
+    },
+    "P123": {
+      "name": "publisher",
+      "total_instances": 172,
+      "coverage_achieved": 0.9593,
+      "covered_pairs": [
+        {
+          "head_type": "MISC",
+          "tail_type": "ORG",
+          "count": 149
+        },
+        {
+          "head_type": "PER",
+          "tail_type": "ORG",
+          "count": 9
+        },
+        {
+          "head_type": "MISC",
+          "tail_type": "PER",
+          "count": 4
+        },
+        {
+          "head_type": "ORG",
+          "tail_type": "ORG",
+          "count": 3
+        }
+      ]
+    },
+    "P127": {
+      "name": "owned by",
+      "total_instances": 208,
+      "coverage_achieved": 0.9615,
+      "covered_pairs": [
+        {
+          "head_type": "ORG",
+          "tail_type": "ORG",
+          "count": 103
+        },
+        {
+          "head_type": "MISC",
+          "tail_type": "ORG",
+          "count": 55
+        },
+        {
+          "head_type": "LOC",
+          "tail_type": "ORG",
+          "count": 22
+        },
+        {
+          "head_type": "LOC",
+          "tail_type": "LOC",
+          "count": 14
+        },
+        {
+          "head_type": "ORG",
+          "tail_type": "PER",
+          "count": 6
+        }
+      ]
+    },
+    "P131": {
+      "name": "located in the administrative territorial entity",
+      "total_instances": 4193,
+      "coverage_achieved": 0.9802,
+      "covered_pairs": [
+        {
+          "head_type": "LOC",
+          "tail_type": "LOC",
+          "count": 3708
+        },
+        {
+          "head_type": "ORG",
+          "tail_type": "LOC",
+          "count": 402
+        }
+      ]
+    },
+    "P136": {
+      "name": "genre",
+      "total_instances": 111,
+      "coverage_achieved": 0.964,
+      "covered_pairs": [
+        {
+          "head_type": "PER",
+          "tail_type": "MISC",
+          "count": 57
+        },
+        {
+          "head_type": "MISC",
+          "tail_type": "MISC",
+          "count": 32
+        },
+        {
+          "head_type": "ORG",
+          "tail_type": "MISC",
+          "count": 10
+        },
+        {
+          "head_type": "PER",
+          "tail_type": "LOC",
+          "count": 6
+        },
+        {
+          "head_type": "ORG",
+          "tail_type": "ORG",
+          "count": 2
+        }
+      ]
+    },
+    "P137": {
+      "name": "operator",
+      "total_instances": 95,
+      "coverage_achieved": 0.9579,
+      "covered_pairs": [
+        {
+          "head_type": "MISC",
+          "tail_type": "ORG",
+          "count": 39
+        },
+        {
+          "head_type": "LOC",
+          "tail_type": "ORG",
+          "count": 32
+        },
+        {
+          "head_type": "ORG",
+          "tail_type": "ORG",
+          "count": 20
+        }
+      ]
+    },
+    "P140": {
+      "name": "religion",
+      "total_instances": 144,
+      "coverage_achieved": 0.9514,
+      "covered_pairs": [
+        {
+          "head_type": "PER",
+          "tail_type": "ORG",
+          "count": 94
+        },
+        {
+          "head_type": "ORG",
+          "tail_type": "ORG",
+          "count": 18
+        },
+        {
+          "head_type": "LOC",
+          "tail_type": "ORG",
+          "count": 17
+        },
+        {
+          "head_type": "PER",
+          "tail_type": "LOC",
+          "count": 8
+        }
+      ]
+    },
+    "P150": {
+      "name": "contains administrative territorial entity",
+      "total_instances": 2004,
+      "coverage_achieved": 0.9711,
+      "covered_pairs": [
+        {
+          "head_type": "LOC",
+          "tail_type": "LOC",
+          "count": 1946
+        }
+      ]
+    },
+    "P155": {
+      "name": "follows",
+      "total_instances": 188,
+      "coverage_achieved": 0.9628,
+      "covered_pairs": [
+        {
+          "head_type": "MISC",
+          "tail_type": "MISC",
+          "count": 131
+        },
+        {
+          "head_type": "ORG",
+          "tail_type": "ORG",
+          "count": 28
+        },
+        {
+          "head_type": "LOC",
+          "tail_type": "LOC",
+          "count": 19
+        },
+        {
+          "head_type": "TIME",
+          "tail_type": "TIME",
+          "count": 3
+        }
+      ]
+    },
+    "P156": {
+      "name": "followed by",
+      "total_instances": 192,
+      "coverage_achieved": 0.9635,
+      "covered_pairs": [
+        {
+          "head_type": "MISC",
+          "tail_type": "MISC",
+          "count": 144
+        },
+        {
+          "head_type": "ORG",
+          "tail_type": "ORG",
+          "count": 27
+        },
+        {
+          "head_type": "LOC",
+          "tail_type": "LOC",
+          "count": 14
+        }
+      ]
+    },
+    "P159": {
+      "name": "headquarters location",
+      "total_instances": 264,
+      "coverage_achieved": 0.9735,
+      "covered_pairs": [
+        {
+          "head_type": "ORG",
+          "tail_type": "LOC",
+          "count": 230
+        },
+        {
+          "head_type": "LOC",
+          "tail_type": "LOC",
+          "count": 15
+        },
+        {
+          "head_type": "MISC",
+          "tail_type": "LOC",
+          "count": 12
+        }
+      ]
+    },
+    "P161": {
+      "name": "cast member",
+      "total_instances": 621,
+      "coverage_achieved": 0.971,
+      "covered_pairs": [
+        {
+          "head_type": "MISC",
+          "tail_type": "PER",
+          "count": 603
+        }
+      ]
+    },
+    "P162": {
+      "name": "producer",
+      "total_instances": 119,
+      "coverage_achieved": 0.9664,
+      "covered_pairs": [
+        {
+          "head_type": "MISC",
+          "tail_type": "PER",
+          "count": 106
+        },
+        {
+          "head_type": "MISC",
+          "tail_type": "ORG",
+          "count": 6
+        },
+        {
+          "head_type": "ORG",
+          "tail_type": "PER",
+          "count": 3
+        }
+      ]
+    },
+    "P166": {
+      "name": "award received",
+      "total_instances": 173,
+      "coverage_achieved": 0.9538,
+      "covered_pairs": [
+        {
+          "head_type": "PER",
+          "tail_type": "MISC",
+          "count": 149
+        },
+        {
+          "head_type": "MISC",
+          "tail_type": "MISC",
+          "count": 12
+        },
+        {
+          "head_type": "PER",
+          "tail_type": "ORG",
+          "count": 4
+        }
+      ]
+    },
+    "P170": {
+      "name": "creator",
+      "total_instances": 231,
+      "coverage_achieved": 0.9567,
+      "covered_pairs": [
+        {
+          "head_type": "PER",
+          "tail_type": "PER",
+          "count": 115
+        },
+        {
+          "head_type": "MISC",
+          "tail_type": "PER",
+          "count": 87
+        },
+        {
+          "head_type": "PER",
+          "tail_type": "ORG",
+          "count": 11
+        },
+        {
+          "head_type": "LOC",
+          "tail_type": "PER",
+          "count": 8
+        }
+      ]
+    },
+    "P171": {
+      "name": "parent taxon",
+      "total_instances": 75,
+      "coverage_achieved": 0.9867,
+      "covered_pairs": [
+        {
+          "head_type": "MISC",
+          "tail_type": "MISC",
+          "count": 66
+        },
+        {
+          "head_type": "LOC",
+          "tail_type": "MISC",
+          "count": 4
+        },
+        {
+          "head_type": "MISC",
+          "tail_type": "LOC",
+          "count": 4
+        }
+      ]
+    },
+    "P172": {
+      "name": "ethnic group",
+      "total_instances": 79,
+      "coverage_achieved": 0.9747,
+      "covered_pairs": [
+        {
+          "head_type": "LOC",
+          "tail_type": "LOC",
+          "count": 31
+        },
+        {
+          "head_type": "PER",
+          "tail_type": "LOC",
+          "count": 25
+        },
+        {
+          "head_type": "LOC",
+          "tail_type": "ORG",
+          "count": 13
+        },
+        {
+          "head_type": "PER",
+          "tail_type": "ORG",
+          "count": 6
+        },
+        {
+          "head_type": "LOC",
+          "tail_type": "MISC",
+          "count": 2
+        }
+      ]
+    },
+    "P175": {
+      "name": "performer",
+      "total_instances": 1052,
+      "coverage_achieved": 0.9572,
+      "covered_pairs": [
+        {
+          "head_type": "MISC",
+          "tail_type": "ORG",
+          "count": 535
+        },
+        {
+          "head_type": "MISC",
+          "tail_type": "PER",
+          "count": 406
+        },
+        {
+          "head_type": "PER",
+          "tail_type": "PER",
+          "count": 66
+        }
+      ]
+    },
+    "P176": {
+      "name": "manufacturer",
+      "total_instances": 83,
+      "coverage_achieved": 0.9639,
+      "covered_pairs": [
+        {
+          "head_type": "MISC",
+          "tail_type": "ORG",
+          "count": 75
+        },
+        {
+          "head_type": "MISC",
+          "tail_type": "LOC",
+          "count": 5
+        }
+      ]
+    },
+    "P178": {
+      "name": "developer",
+      "total_instances": 238,
+      "coverage_achieved": 0.9664,
+      "covered_pairs": [
+        {
+          "head_type": "MISC",
+          "tail_type": "ORG",
+          "count": 218
+        },
+        {
+          "head_type": "MISC",
+          "tail_type": "PER",
+          "count": 12
+        }
+      ]
+    },
+    "P179": {
+      "name": "series",
+      "total_instances": 144,
+      "coverage_achieved": 0.9583,
+      "covered_pairs": [
+        {
+          "head_type": "MISC",
+          "tail_type": "MISC",
+          "count": 131
+        },
+        {
+          "head_type": "MISC",
+          "tail_type": "PER",
+          "count": 7
+        }
+      ]
+    },
+    "P190": {
+      "name": "sister city",
+      "total_instances": 4,
+      "coverage_achieved": 1.0,
+      "covered_pairs": [
+        {
+          "head_type": "LOC",
+          "tail_type": "LOC",
+          "count": 4
+        }
+      ]
+    },
+    "P194": {
+      "name": "legislative body",
+      "total_instances": 166,
+      "coverage_achieved": 0.9699,
+      "covered_pairs": [
+        {
+          "head_type": "LOC",
+          "tail_type": "ORG",
+          "count": 156
+        },
+        {
+          "head_type": "LOC",
+          "tail_type": "MISC",
+          "count": 5
+        }
+      ]
+    },
+    "P205": {
+      "name": "basin country",
+      "total_instances": 85,
+      "coverage_achieved": 1.0,
+      "covered_pairs": [
+        {
+          "head_type": "LOC",
+          "tail_type": "LOC",
+          "count": 85
+        }
+      ]
+    },
+    "P206": {
+      "name": "located in or next to body of water",
+      "total_instances": 194,
+      "coverage_achieved": 0.9845,
+      "covered_pairs": [
+        {
+          "head_type": "LOC",
+          "tail_type": "LOC",
+          "count": 191
+        }
+      ]
+    },
+    "P241": {
+      "name": "military branch",
+      "total_instances": 108,
+      "coverage_achieved": 0.9722,
+      "covered_pairs": [
+        {
+          "head_type": "PER",
+          "tail_type": "ORG",
+          "count": 91
+        },
+        {
+          "head_type": "ORG",
+          "tail_type": "ORG",
+          "count": 11
+        },
+        {
+          "head_type": "PER",
+          "tail_type": "LOC",
+          "count": 3
+        }
+      ]
+    },
+    "P264": {
+      "name": "record label",
+      "total_instances": 583,
+      "coverage_achieved": 0.9691,
+      "covered_pairs": [
+        {
+          "head_type": "MISC",
+          "tail_type": "ORG",
+          "count": 327
+        },
+        {
+          "head_type": "PER",
+          "tail_type": "ORG",
+          "count": 157
+        },
+        {
+          "head_type": "ORG",
+          "tail_type": "ORG",
+          "count": 81
+        }
+      ]
+    },
+    "P272": {
+      "name": "production company",
+      "total_instances": 82,
+      "coverage_achieved": 0.9512,
+      "covered_pairs": [
+        {
+          "head_type": "MISC",
+          "tail_type": "ORG",
+          "count": 75
+        },
+        {
+          "head_type": "PER",
+          "tail_type": "ORG",
+          "count": 3
+        }
+      ]
+    },
+    "P276": {
+      "name": "location",
+      "total_instances": 172,
+      "coverage_achieved": 0.9826,
+      "covered_pairs": [
+        {
+          "head_type": "MISC",
+          "tail_type": "LOC",
+          "count": 126
+        },
+        {
+          "head_type": "LOC",
+          "tail_type": "LOC",
+          "count": 33
+        },
+        {
+          "head_type": "ORG",
+          "tail_type": "LOC",
+          "count": 10
+        }
+      ]
+    },
+    "P279": {
+      "name": "subclass of",
+      "total_instances": 77,
+      "coverage_achieved": 0.961,
+      "covered_pairs": [
+        {
+          "head_type": "MISC",
+          "tail_type": "MISC",
+          "count": 45
+        },
+        {
+          "head_type": "ORG",
+          "tail_type": "ORG",
+          "count": 15
+        },
+        {
+          "head_type": "MISC",
+          "tail_type": "LOC",
+          "count": 9
+        },
+        {
+          "head_type": "MISC",
+          "tail_type": "ORG",
+          "count": 2
+        },
+        {
+          "head_type": "LOC",
+          "tail_type": "MISC",
+          "count": 1
+        },
+        {
+          "head_type": "MISC",
+          "tail_type": "NUM",
+          "count": 1
+        },
+        {
+          "head_type": "LOC",
+          "tail_type": "ORG",
+          "count": 1
+        }
+      ]
+    },
+    "P355": {
+      "name": "subsidiary",
+      "total_instances": 92,
+      "coverage_achieved": 0.9783,
+      "covered_pairs": [
+        {
+          "head_type": "ORG",
+          "tail_type": "ORG",
+          "count": 72
+        },
+        {
+          "head_type": "ORG",
+          "tail_type": "MISC",
+          "count": 15
+        },
+        {
+          "head_type": "ORG",
+          "tail_type": "LOC",
+          "count": 3
+        }
+      ]
+    },
+    "P361": {
+      "name": "part of",
+      "total_instances": 596,
+      "coverage_achieved": 0.9564,
+      "covered_pairs": [
+        {
+          "head_type": "MISC",
+          "tail_type": "MISC",
+          "count": 254
+        },
+        {
+          "head_type": "LOC",
+          "tail_type": "LOC",
+          "count": 184
+        },
+        {
+          "head_type": "ORG",
+          "tail_type": "ORG",
+          "count": 80
+        },
+        {
+          "head_type": "LOC",
+          "tail_type": "MISC",
+          "count": 22
+        },
+        {
+          "head_type": "MISC",
+          "tail_type": "ORG",
+          "count": 10
+        },
+        {
+          "head_type": "PER",
+          "tail_type": "ORG",
+          "count": 10
+        },
+        {
+          "head_type": "LOC",
+          "tail_type": "ORG",
+          "count": 10
+        }
+      ]
+    },
+    "P364": {
+      "name": "original language of work",
+      "total_instances": 66,
+      "coverage_achieved": 0.9545,
+      "covered_pairs": [
+        {
+          "head_type": "MISC",
+          "tail_type": "MISC",
+          "count": 36
+        },
+        {
+          "head_type": "MISC",
+          "tail_type": "LOC",
+          "count": 25
+        },
+        {
+          "head_type": "LOC",
+          "tail_type": "MISC",
+          "count": 1
+        },
+        {
+          "head_type": "PER",
+          "tail_type": "LOC",
+          "count": 1
+        }
+      ]
+    },
+    "P400": {
+      "name": "platform",
+      "total_instances": 304,
+      "coverage_achieved": 0.9803,
+      "covered_pairs": [
+        {
+          "head_type": "MISC",
+          "tail_type": "MISC",
+          "count": 288
+        },
+        {
+          "head_type": "PER",
+          "tail_type": "MISC",
+          "count": 10
+        }
+      ]
+    },
+    "P403": {
+      "name": "mouth of the watercourse",
+      "total_instances": 95,
+      "coverage_achieved": 1.0,
+      "covered_pairs": [
+        {
+          "head_type": "LOC",
+          "tail_type": "LOC",
+          "count": 95
+        }
+      ]
+    },
+    "P449": {
+      "name": "original network",
+      "total_instances": 152,
+      "coverage_achieved": 0.9539,
+      "covered_pairs": [
+        {
+          "head_type": "MISC",
+          "tail_type": "ORG",
+          "count": 117
+        },
+        {
+          "head_type": "MISC",
+          "tail_type": "MISC",
+          "count": 24
+        },
+        {
+          "head_type": "PER",
+          "tail_type": "ORG",
+          "count": 4
+        }
+      ]
+    },
+    "P463": {
+      "name": "member of",
+      "total_instances": 414,
+      "coverage_achieved": 0.9662,
+      "covered_pairs": [
+        {
+          "head_type": "PER",
+          "tail_type": "ORG",
+          "count": 274
+        },
+        {
+          "head_type": "LOC",
+          "tail_type": "ORG",
+          "count": 100
+        },
+        {
+          "head_type": "ORG",
+          "tail_type": "ORG",
+          "count": 15
+        },
+        {
+          "head_type": "LOC",
+          "tail_type": "LOC",
+          "count": 11
+        }
+      ]
+    },
+    "P488": {
+      "name": "chairperson",
+      "total_instances": 63,
+      "coverage_achieved": 0.9524,
+      "covered_pairs": [
+        {
+          "head_type": "ORG",
+          "tail_type": "PER",
+          "count": 60
+        }
+      ]
+    },
+    "P495": {
+      "name": "country of origin",
+      "total_instances": 539,
+      "coverage_achieved": 0.9777,
+      "covered_pairs": [
+        {
+          "head_type": "MISC",
+          "tail_type": "LOC",
+          "count": 404
+        },
+        {
+          "head_type": "ORG",
+          "tail_type": "LOC",
+          "count": 103
+        },
+        {
+          "head_type": "LOC",
+          "tail_type": "LOC",
+          "count": 20
+        }
+      ]
+    },
+    "P527": {
+      "name": "has part",
+      "total_instances": 632,
+      "coverage_achieved": 0.9573,
+      "covered_pairs": [
+        {
+          "head_type": "ORG",
+          "tail_type": "PER",
+          "count": 317
+        },
+        {
+          "head_type": "LOC",
+          "tail_type": "LOC",
+          "count": 132
+        },
+        {
+          "head_type": "ORG",
+          "tail_type": "ORG",
+          "count": 63
+        },
+        {
+          "head_type": "MISC",
+          "tail_type": "MISC",
+          "count": 39
+        },
+        {
+          "head_type": "MISC",
+          "tail_type": "PER",
+          "count": 21
+        },
+        {
+          "head_type": "MISC",
+          "tail_type": "LOC",
+          "count": 18
+        },
+        {
+          "head_type": "ORG",
+          "tail_type": "LOC",
+          "count": 8
+        },
+        {
+          "head_type": "LOC",
+          "tail_type": "ORG",
+          "count": 7
+        }
+      ]
+    },
+    "P551": {
+      "name": "residence",
+      "total_instances": 35,
+      "coverage_achieved": 0.9714,
+      "covered_pairs": [
+        {
+          "head_type": "PER",
+          "tail_type": "LOC",
+          "count": 33
+        },
+        {
+          "head_type": "PER",
+          "tail_type": "ORG",
+          "count": 1
+        }
+      ]
+    },
+    "P569": {
+      "name": "date of birth",
+      "total_instances": 1044,
+      "coverage_achieved": 0.9952,
+      "covered_pairs": [
+        {
+          "head_type": "PER",
+          "tail_type": "TIME",
+          "count": 1039
+        }
+      ]
+    },
+    "P570": {
+      "name": "date of death",
+      "total_instances": 805,
+      "coverage_achieved": 0.9863,
+      "covered_pairs": [
+        {
+          "head_type": "PER",
+          "tail_type": "TIME",
+          "count": 794
+        }
+      ]
+    },
+    "P571": {
+      "name": "inception",
+      "total_instances": 475,
+      "coverage_achieved": 0.9958,
+      "covered_pairs": [
+        {
+          "head_type": "ORG",
+          "tail_type": "TIME",
+          "count": 285
+        },
+        {
+          "head_type": "LOC",
+          "tail_type": "TIME",
+          "count": 105
+        },
+        {
+          "head_type": "MISC",
+          "tail_type": "TIME",
+          "count": 83
+        }
+      ]
+    },
+    "P576": {
+      "name": "dissolved, abolished or demolished",
+      "total_instances": 79,
+      "coverage_achieved": 0.9873,
+      "covered_pairs": [
+        {
+          "head_type": "ORG",
+          "tail_type": "TIME",
+          "count": 49
+        },
+        {
+          "head_type": "LOC",
+          "tail_type": "TIME",
+          "count": 26
+        },
+        {
+          "head_type": "MISC",
+          "tail_type": "TIME",
+          "count": 3
+        }
+      ]
+    },
+    "P577": {
+      "name": "publication date",
+      "total_instances": 1142,
+      "coverage_achieved": 0.9816,
+      "covered_pairs": [
+        {
+          "head_type": "MISC",
+          "tail_type": "TIME",
+          "count": 1121
+        }
+      ]
+    },
+    "P580": {
+      "name": "start time",
+      "total_instances": 110,
+      "coverage_achieved": 0.9545,
+      "covered_pairs": [
+        {
+          "head_type": "MISC",
+          "tail_type": "TIME",
+          "count": 100
+        },
+        {
+          "head_type": "ORG",
+          "tail_type": "TIME",
+          "count": 5
+        }
+      ]
+    },
+    "P582": {
+      "name": "end time",
+      "total_instances": 51,
+      "coverage_achieved": 0.9804,
+      "covered_pairs": [
+        {
+          "head_type": "MISC",
+          "tail_type": "TIME",
+          "count": 47
+        },
+        {
+          "head_type": "ORG",
+          "tail_type": "TIME",
+          "count": 3
+        }
+      ]
+    },
+    "P585": {
+      "name": "point in time",
+      "total_instances": 96,
+      "coverage_achieved": 0.9792,
+      "covered_pairs": [
+        {
+          "head_type": "MISC",
+          "tail_type": "TIME",
+          "count": 85
+        },
+        {
+          "head_type": "LOC",
+          "tail_type": "TIME",
+          "count": 9
+        }
+      ]
+    },
+    "P607": {
+      "name": "conflict",
+      "total_instances": 275,
+      "coverage_achieved": 0.9818,
+      "covered_pairs": [
+        {
+          "head_type": "PER",
+          "tail_type": "MISC",
+          "count": 143
+        },
+        {
+          "head_type": "ORG",
+          "tail_type": "MISC",
+          "count": 105
+        },
+        {
+          "head_type": "LOC",
+          "tail_type": "MISC",
+          "count": 13
+        },
+        {
+          "head_type": "MISC",
+          "tail_type": "MISC",
+          "count": 9
+        }
+      ]
+    },
+    "P674": {
+      "name": "characters",
+      "total_instances": 163,
+      "coverage_achieved": 0.9755,
+      "covered_pairs": [
+        {
+          "head_type": "MISC",
+          "tail_type": "PER",
+          "count": 138
+        },
+        {
+          "head_type": "MISC",
+          "tail_type": "MISC",
+          "count": 8
+        },
+        {
+          "head_type": "PER",
+          "tail_type": "PER",
+          "count": 8
+        },
+        {
+          "head_type": "LOC",
+          "tail_type": "PER",
+          "count": 5
+        }
+      ]
+    },
+    "P676": {
+      "name": "lyrics by",
+      "total_instances": 36,
+      "coverage_achieved": 0.9722,
+      "covered_pairs": [
+        {
+          "head_type": "MISC",
+          "tail_type": "PER",
+          "count": 35
+        }
+      ]
+    },
+    "P706": {
+      "name": "located on terrain feature",
+      "total_instances": 137,
+      "coverage_achieved": 0.9708,
+      "covered_pairs": [
+        {
+          "head_type": "LOC",
+          "tail_type": "LOC",
+          "count": 130
+        },
+        {
+          "head_type": "MISC",
+          "tail_type": "LOC",
+          "count": 3
+        }
+      ]
+    },
+    "P710": {
+      "name": "participant",
+      "total_instances": 191,
+      "coverage_achieved": 0.9686,
+      "covered_pairs": [
+        {
+          "head_type": "MISC",
+          "tail_type": "LOC",
+          "count": 87
+        },
+        {
+          "head_type": "MISC",
+          "tail_type": "PER",
+          "count": 48
+        },
+        {
+          "head_type": "MISC",
+          "tail_type": "ORG",
+          "count": 38
+        },
+        {
+          "head_type": "MISC",
+          "tail_type": "MISC",
+          "count": 7
+        },
+        {
+          "head_type": "LOC",
+          "tail_type": "LOC",
+          "count": 5
+        }
+      ]
+    },
+    "P737": {
+      "name": "influenced by",
+      "total_instances": 9,
+      "coverage_achieved": 1.0,
+      "covered_pairs": [
+        {
+          "head_type": "PER",
+          "tail_type": "PER",
+          "count": 4
+        },
+        {
+          "head_type": "MISC",
+          "tail_type": "MISC",
+          "count": 3
+        },
+        {
+          "head_type": "MISC",
+          "tail_type": "PER",
+          "count": 1
+        },
+        {
+          "head_type": "ORG",
+          "tail_type": "ORG",
+          "count": 1
+        }
+      ]
+    },
+    "P740": {
+      "name": "location of formation",
+      "total_instances": 62,
+      "coverage_achieved": 0.9516,
+      "covered_pairs": [
+        {
+          "head_type": "ORG",
+          "tail_type": "LOC",
+          "count": 54
+        },
+        {
+          "head_type": "MISC",
+          "tail_type": "LOC",
+          "count": 3
+        },
+        {
+          "head_type": "PER",
+          "tail_type": "LOC",
+          "count": 2
+        }
+      ]
+    },
+    "P749": {
+      "name": "parent organization",
+      "total_instances": 92,
+      "coverage_achieved": 0.9674,
+      "covered_pairs": [
+        {
+          "head_type": "ORG",
+          "tail_type": "ORG",
+          "count": 76
+        },
+        {
+          "head_type": "MISC",
+          "tail_type": "ORG",
+          "count": 11
+        },
+        {
+          "head_type": "MISC",
+          "tail_type": "PER",
+          "count": 2
+        }
+      ]
+    },
+    "P800": {
+      "name": "notable work",
+      "total_instances": 150,
+      "coverage_achieved": 0.96,
+      "covered_pairs": [
+        {
+          "head_type": "PER",
+          "tail_type": "MISC",
+          "count": 138
+        },
+        {
+          "head_type": "PER",
+          "tail_type": "LOC",
+          "count": 6
+        }
+      ]
+    },
+    "P807": {
+      "name": "separated from",
+      "total_instances": 2,
+      "coverage_achieved": 1.0,
+      "covered_pairs": [
+        {
+          "head_type": "ORG",
+          "tail_type": "ORG",
+          "count": 1
+        },
+        {
+          "head_type": "LOC",
+          "tail_type": "LOC",
+          "count": 1
+        }
+      ]
+    },
+    "P840": {
+      "name": "narrative location",
+      "total_instances": 48,
+      "coverage_achieved": 0.9792,
+      "covered_pairs": [
+        {
+          "head_type": "MISC",
+          "tail_type": "LOC",
+          "count": 41
+        },
+        {
+          "head_type": "PER",
+          "tail_type": "LOC",
+          "count": 2
+        },
+        {
+          "head_type": "ORG",
+          "tail_type": "LOC",
+          "count": 2
+        },
+        {
+          "head_type": "LOC",
+          "tail_type": "LOC",
+          "count": 2
+        }
+      ]
+    },
+    "P937": {
+      "name": "work location",
+      "total_instances": 104,
+      "coverage_achieved": 0.9712,
+      "covered_pairs": [
+        {
+          "head_type": "PER",
+          "tail_type": "LOC",
+          "count": 92
+        },
+        {
+          "head_type": "PER",
+          "tail_type": "ORG",
+          "count": 9
+        }
+      ]
+    },
+    "P1001": {
+      "name": "applies to jurisdiction",
+      "total_instances": 298,
+      "coverage_achieved": 0.9631,
+      "covered_pairs": [
+        {
+          "head_type": "ORG",
+          "tail_type": "LOC",
+          "count": 249
+        },
+        {
+          "head_type": "MISC",
+          "tail_type": "LOC",
+          "count": 30
+        },
+        {
+          "head_type": "ORG",
+          "tail_type": "ORG",
+          "count": 8
+        }
+      ]
+    },
+    "P1056": {
+      "name": "product or material produced",
+      "total_instances": 36,
+      "coverage_achieved": 1.0,
+      "covered_pairs": [
+        {
+          "head_type": "ORG",
+          "tail_type": "MISC",
+          "count": 32
+        },
+        {
+          "head_type": "ORG",
+          "tail_type": "ORG",
+          "count": 4
+        }
+      ]
+    },
+    "P1198": {
+      "name": "unemployment rate",
+      "total_instances": 2,
+      "coverage_achieved": 1.0,
+      "covered_pairs": [
+        {
+          "head_type": "LOC",
+          "tail_type": "NUM",
+          "count": 1
+        },
+        {
+          "head_type": "LOC",
+          "tail_type": "TIME",
+          "count": 1
+        }
+      ]
+    },
+    "P1336": {
+      "name": "territory claimed by",
+      "total_instances": 33,
+      "coverage_achieved": 0.9697,
+      "covered_pairs": [
+        {
+          "head_type": "LOC",
+          "tail_type": "LOC",
+          "count": 30
+        },
+        {
+          "head_type": "LOC",
+          "tail_type": "MISC",
+          "count": 2
+        }
+      ]
+    },
+    "P1344": {
+      "name": "participant of",
+      "total_instances": 223,
+      "coverage_achieved": 0.9641,
+      "covered_pairs": [
+        {
+          "head_type": "PER",
+          "tail_type": "MISC",
+          "count": 183
+        },
+        {
+          "head_type": "LOC",
+          "tail_type": "MISC",
+          "count": 19
+        },
+        {
+          "head_type": "ORG",
+          "tail_type": "MISC",
+          "count": 13
+        }
+      ]
+    },
+    "P1365": {
+      "name": "replaces",
+      "total_instances": 18,
+      "coverage_achieved": 1.0,
+      "covered_pairs": [
+        {
+          "head_type": "LOC",
+          "tail_type": "LOC",
+          "count": 11
+        },
+        {
+          "head_type": "ORG",
+          "tail_type": "ORG",
+          "count": 3
+        },
+        {
+          "head_type": "MISC",
+          "tail_type": "MISC",
+          "count": 3
+        },
+        {
+          "head_type": "MISC",
+          "tail_type": "ORG",
+          "count": 1
+        }
+      ]
+    },
+    "P1366": {
+      "name": "replaced by",
+      "total_instances": 36,
+      "coverage_achieved": 0.9722,
+      "covered_pairs": [
+        {
+          "head_type": "LOC",
+          "tail_type": "LOC",
+          "count": 26
+        },
+        {
+          "head_type": "ORG",
+          "tail_type": "ORG",
+          "count": 5
+        },
+        {
+          "head_type": "MISC",
+          "tail_type": "MISC",
+          "count": 3
+        },
+        {
+          "head_type": "ORG",
+          "tail_type": "MISC",
+          "count": 1
+        }
+      ]
+    },
+    "P1376": {
+      "name": "capital of",
+      "total_instances": 76,
+      "coverage_achieved": 0.9605,
+      "covered_pairs": [
+        {
+          "head_type": "LOC",
+          "tail_type": "LOC",
+          "count": 73
+        }
+      ]
+    },
+    "P1412": {
+      "name": "languages spoken, written or signed",
+      "total_instances": 155,
+      "coverage_achieved": 0.9677,
+      "covered_pairs": [
+        {
+          "head_type": "PER",
+          "tail_type": "LOC",
+          "count": 77
+        },
+        {
+          "head_type": "PER",
+          "tail_type": "MISC",
+          "count": 69
+        },
+        {
+          "head_type": "LOC",
+          "tail_type": "LOC",
+          "count": 4
+        }
+      ]
+    },
+    "P1441": {
+      "name": "present in work",
+      "total_instances": 299,
+      "coverage_achieved": 0.9632,
+      "covered_pairs": [
+        {
+          "head_type": "PER",
+          "tail_type": "MISC",
+          "count": 259
+        },
+        {
+          "head_type": "MISC",
+          "tail_type": "MISC",
+          "count": 12
+        },
+        {
+          "head_type": "ORG",
+          "tail_type": "MISC",
+          "count": 10
+        },
+        {
+          "head_type": "LOC",
+          "tail_type": "MISC",
+          "count": 7
+        }
+      ]
+    },
+    "P3373": {
+      "name": "sibling",
+      "total_instances": 335,
+      "coverage_achieved": 1.0,
+      "covered_pairs": [
+        {
+          "head_type": "PER",
+          "tail_type": "PER",
+          "count": 335
+        }
+      ]
+    }
+  }
+}

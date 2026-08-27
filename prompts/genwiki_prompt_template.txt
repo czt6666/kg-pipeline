@@ -1,0 +1,196 @@
+你是一个结构化信息抽取器。从给定文本中抽取实体和关系三元组，输出严格的 JSON。
+
+实体类型只能取以下值：PER, ORG, LOC, TIME, NUM, MISC
+
+关系只能取以下名称，不得自造（每行一条附一句话说明）：
+[实体间关系]
+- birthPlace — place where the person was born
+- country — sovereign state the subject is located in
+- location — location of the subject
+- deathPlace — place where the person died
+- isPartOf — the larger entity this subject is a part of
+- city — city the subject is located in
+- state — state/province the subject is located in
+- spouse — spouse of the person
+- region — region the subject is located in
+- hometown — hometown of the person
+- residence — place where the person resides
+- county — county the subject is located in
+- family — family the person belongs to
+- team — sports team the person plays for
+- road — road the subject is located on
+- locatedInArea — area the subject is located in
+- associatedMusicalArtist — musical artist associated with the subject
+- associatedBand — band associated with the subject
+- subdivision — administrative subdivision of the subject
+- artist — artist of the work
+- home — home location of the subject
+- writer — writer of the work
+- headquarter — location of the headquarters
+- militaryCommand — military command the unit belongs to
+- starring — actor starring in the work
+- district — district the subject is located in
+- place — place associated with the subject
+- stateOfOrigin — state of origin
+- children — children of the person
+- language — language associated with the subject
+- producer — producer of the work
+- combatant — combatant in the conflict
+- owner — owner of the subject
+- conference — sports conference the team belongs to
+- ground — home ground/stadium of the team
+- label — record label of the work
+- director — director of the work
+- rd1Team — team in the first round
+- regionServed — region the organization serves
+- rd2Team — team in the second round
+- siteStadium — stadium site
+- restingPlace — resting place (burial location) of the person
+- manufacturer — manufacturer of the product
+- company — company
+- award — award
+- format — format
+- sport — sport
+- opponent — opponent
+- venue — venue
+- formerBandMember — former band member
+- province — province
+- almaMater — alma mater
+- route — route
+- industry — industry
+- bandMember — band member
+- publisher — publisher
+- author — author
+- workplaces — workplaces
+- formerTeam — former team
+- age — age
+- school — school
+- musicalBand — musical band
+- musicalArtist — musical artist
+- background — background
+- party — party
+- event — event
+- goals — goals
+- stadium — stadium
+- education — education
+- commander — commander
+- operator — operator
+- affiliation — affiliation
+- termStart — term start
+- termEnd — term end
+- computingPlatform — computing platform
+- developer — developer
+- released — released
+- class — class
+- founded — founded
+- currentMember — current member
+- builder — builder
+- routeStart — route start
+- routeEnd — route end
+- routeJunction — route junction
+- product — product
+- before — before
+- synonym — synonym
+- time — time
+- keyPerson — key person
+- directedby — directedby
+- highSchool — high school
+- division — division
+- club — club
+- coach — coach
+- height — height
+- after — after
+- attend — attend
+- ship — ship
+- recordLabel — record label
+- studio — studio
+- cinematography — cinematography
+- locmapin — locmapin
+- leader — leader
+- predecessor — predecessor
+- note — note
+- influencedBy — influenced by
+- parent — parent
+- servingRailwayLine — serving railway line
+- architect — architect
+- length — length
+- subdivisionRanks — subdivision ranks
+- campus — campus
+- recordedIn — recorded in
+- owningOrganisation — owning organisation
+- governingBody — governing body
+- instrument — instrument
+- writtenby — writtenby
+- address — address
+- series — series
+- genus — genus
+- successor — successor
+- strength — strength
+- league — league
+- militaryBranch — military branch
+- species — species
+[属性/字面量关系]
+- birthYear — year the person was born
+- nationality — nationality of the person
+- activeYearsStartYear — year the person began their active career
+- deathYear — year the person died
+- title — honorary or professional title held by the person
+- pushpinMap — map name used in the infobox (Wikipedia pushpin map)
+- populationTotal — total population of the place
+- settlementType — type of settlement (e.g. hamlet, village, city)
+- birthName — name of the person at birth
+- activeYearsEndYear — year the person ended their active career
+- type — type or class of the entity
+- foundingYear — year the organization/place was founded
+- name — name of the entity
+- yearOfConstruction — year the structure was constructed
+- openingYear — year the venue/structure opened
+- office — public office held by the person
+- occupation — occupation of the person
+- alias — alternative name of the entity
+- extra — extra attribute value
+- genre — genre of the work or artist
+- year — year associated with the subject
+- orderInOffice — order in office (e.g. 45th)
+- rev — revenue figure
+- PopulatedPlace/areaTotal — total area of the populated place
+- religion — religion of the person
+- field — field of work or study
+- knownFor — what the person is known for
+- birthDate — birth date
+- nativeNameLang — native name lang
+- date — date
+- deathDate — death date
+- literaryGenre — literary genre
+- years — years
+- order — order
+- area — area
+
+输出规则：
+1. entities 中每个实体给出 id、name、type、mentions。name 必须使用文本中出现的字面形式。
+2. triples 中 head 和 tail 填写 entities 中的 id。
+3. relation 必须逐字取自上方关系列表。
+4. 尽量完整地抽取：文本中每个实体对/属性只要存在对应关系都要抽，宁可多抽不可漏抽。
+5. 只输出 JSON，不要任何解释，不要 markdown 代码围栏。
+
+示例1
+文本：
+Toveybeh-ye Sheykh Hatam ( Persian : ‎ , also Romanized as Ţoveybeh-ye Sheykh Ḩātam ; also known as Ţove'ībeh ) is a village in Jahad Rural District , Hamidiyeh District , Ahvaz County , Khuzestan Province , Iran . At the 2006 census , its population was 185 , in 41 families .
+抽取结果：
+{"entities": [{"id": "e1", "name": "185", "type": "TIME", "mentions": ["185"]}, {"id": "e2", "name": "Iran", "type": "LOC", "mentions": ["Iran"]}, {"id": "e3", "name": "Toveybeh-ye Sheykh Hatam", "type": "MISC", "mentions": ["Toveybeh-ye Sheykh Hatam"]}, {"id": "e4", "name": "village", "type": "MISC", "mentions": ["village"]}], "triples": [{"head": "e3", "relation": "settlementType", "tail": "e4"}, {"head": "e3", "relation": "pushpinMap", "tail": "e2"}, {"head": "e3", "relation": "country", "tail": "e2"}, {"head": "e3", "relation": "populationTotal", "tail": "e1"}]}
+
+示例2
+文本：
+Shiney Ahuja was born in Dehradun , Uttarakhand , to Col . Suraj Prakash Ahuja , an officer of the Indian Army , and his wife Seema Ahuja . He has an elder sister who is settled in Texas .
+抽取结果：
+{"entities": [{"id": "e1", "name": "Dehradun", "type": "LOC", "mentions": ["Dehradun"]}, {"id": "e2", "name": "India", "type": "LOC", "mentions": ["India"]}, {"id": "e3", "name": "Shiney Ahuja", "type": "PER", "mentions": ["Shiney Ahuja"]}], "triples": [{"head": "e3", "relation": "residence", "tail": "e2"}, {"head": "e3", "relation": "birthPlace", "tail": "e1"}, {"head": "e3", "relation": "birthPlace", "tail": "e2"}]}
+
+示例3
+文本：
+Shiney Ahuja ( born 15 May ) is an Indian actor who won the Filmfare Best Male Debut Award for in 2003 and then followed with several hit films like , Woh Lamhe , , And Welcome Back .
+抽取结果：
+{"entities": [{"id": "e1", "name": "2003", "type": "TIME", "mentions": ["2003"]}, {"id": "e2", "name": "India", "type": "LOC", "mentions": ["India"]}, {"id": "e3", "name": "Shiney Ahuja", "type": "PER", "mentions": ["Shiney Ahuja"]}], "triples": [{"head": "e3", "relation": "residence", "tail": "e2"}, {"head": "e3", "relation": "activeYearsStartYear", "tail": "e1"}, {"head": "e3", "relation": "birthPlace", "tail": "e2"}]}
+
+文本：
+{TEXT}
+抽取结果：

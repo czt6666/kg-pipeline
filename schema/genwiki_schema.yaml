@@ -1,0 +1,809 @@
+dataset: genwiki
+entity_types:
+- PER
+- ORG
+- LOC
+- TIME
+- NUM
+- MISC
+relations:
+- name: birthPlace
+  kind: relational
+  domain: []
+  range: []
+  description: place where the person was born
+- name: country
+  kind: relational
+  domain: []
+  range: []
+  description: sovereign state the subject is located in
+- name: location
+  kind: relational
+  domain: []
+  range: []
+  description: location of the subject
+- name: birthYear
+  kind: intrinsic
+  domain: []
+  range: []
+  description: year the person was born
+- name: deathPlace
+  kind: relational
+  domain: []
+  range: []
+  description: place where the person died
+- name: nationality
+  kind: intrinsic
+  domain: []
+  range: []
+  description: nationality of the person
+- name: activeYearsStartYear
+  kind: intrinsic
+  domain: []
+  range: []
+  description: year the person began their active career
+- name: deathYear
+  kind: intrinsic
+  domain: []
+  range: []
+  description: year the person died
+- name: title
+  kind: intrinsic
+  domain: []
+  range: []
+  description: honorary or professional title held by the person
+- name: pushpinMap
+  kind: intrinsic
+  domain: []
+  range: []
+  description: map name used in the infobox (Wikipedia pushpin map)
+- name: isPartOf
+  kind: relational
+  domain: []
+  range: []
+  description: the larger entity this subject is a part of
+- name: populationTotal
+  kind: intrinsic
+  domain: []
+  range: []
+  description: total population of the place
+- name: settlementType
+  kind: intrinsic
+  domain: []
+  range: []
+  description: type of settlement (e.g. hamlet, village, city)
+- name: birthName
+  kind: intrinsic
+  domain: []
+  range: []
+  description: name of the person at birth
+- name: activeYearsEndYear
+  kind: intrinsic
+  domain: []
+  range: []
+  description: year the person ended their active career
+- name: type
+  kind: intrinsic
+  domain: []
+  range: []
+  description: type or class of the entity
+- name: foundingYear
+  kind: intrinsic
+  domain: []
+  range: []
+  description: year the organization/place was founded
+- name: city
+  kind: relational
+  domain: []
+  range: []
+  description: city the subject is located in
+- name: state
+  kind: relational
+  domain: []
+  range: []
+  description: state/province the subject is located in
+- name: spouse
+  kind: relational
+  domain: []
+  range: []
+  description: spouse of the person
+- name: region
+  kind: relational
+  domain: []
+  range: []
+  description: region the subject is located in
+- name: name
+  kind: intrinsic
+  domain: []
+  range: []
+  description: name of the entity
+- name: hometown
+  kind: relational
+  domain: []
+  range: []
+  description: hometown of the person
+- name: residence
+  kind: relational
+  domain: []
+  range: []
+  description: place where the person resides
+- name: county
+  kind: relational
+  domain: []
+  range: []
+  description: county the subject is located in
+- name: yearOfConstruction
+  kind: intrinsic
+  domain: []
+  range: []
+  description: year the structure was constructed
+- name: openingYear
+  kind: intrinsic
+  domain: []
+  range: []
+  description: year the venue/structure opened
+- name: office
+  kind: intrinsic
+  domain: []
+  range: []
+  description: public office held by the person
+- name: family
+  kind: relational
+  domain: []
+  range: []
+  description: family the person belongs to
+- name: team
+  kind: relational
+  domain: []
+  range: []
+  description: sports team the person plays for
+- name: road
+  kind: relational
+  domain: []
+  range: []
+  description: road the subject is located on
+- name: locatedInArea
+  kind: relational
+  domain: []
+  range: []
+  description: area the subject is located in
+- name: associatedMusicalArtist
+  kind: relational
+  domain: []
+  range: []
+  description: musical artist associated with the subject
+- name: occupation
+  kind: intrinsic
+  domain: []
+  range: []
+  description: occupation of the person
+- name: associatedBand
+  kind: relational
+  domain: []
+  range: []
+  description: band associated with the subject
+- name: subdivision
+  kind: relational
+  domain: []
+  range: []
+  description: administrative subdivision of the subject
+- name: artist
+  kind: relational
+  domain: []
+  range: []
+  description: artist of the work
+- name: alias
+  kind: intrinsic
+  domain: []
+  range: []
+  description: alternative name of the entity
+- name: home
+  kind: relational
+  domain: []
+  range: []
+  description: home location of the subject
+- name: writer
+  kind: relational
+  domain: []
+  range: []
+  description: writer of the work
+- name: headquarter
+  kind: relational
+  domain: []
+  range: []
+  description: location of the headquarters
+- name: militaryCommand
+  kind: relational
+  domain: []
+  range: []
+  description: military command the unit belongs to
+- name: starring
+  kind: relational
+  domain: []
+  range: []
+  description: actor starring in the work
+- name: district
+  kind: relational
+  domain: []
+  range: []
+  description: district the subject is located in
+- name: place
+  kind: relational
+  domain: []
+  range: []
+  description: place associated with the subject
+- name: stateOfOrigin
+  kind: relational
+  domain: []
+  range: []
+  description: state of origin
+- name: children
+  kind: relational
+  domain: []
+  range: []
+  description: children of the person
+- name: language
+  kind: relational
+  domain: []
+  range: []
+  description: language associated with the subject
+- name: producer
+  kind: relational
+  domain: []
+  range: []
+  description: producer of the work
+- name: combatant
+  kind: relational
+  domain: []
+  range: []
+  description: combatant in the conflict
+- name: extra
+  kind: intrinsic
+  domain: []
+  range: []
+  description: extra attribute value
+- name: owner
+  kind: relational
+  domain: []
+  range: []
+  description: owner of the subject
+- name: conference
+  kind: relational
+  domain: []
+  range: []
+  description: sports conference the team belongs to
+- name: ground
+  kind: relational
+  domain: []
+  range: []
+  description: home ground/stadium of the team
+- name: label
+  kind: relational
+  domain: []
+  range: []
+  description: record label of the work
+- name: genre
+  kind: intrinsic
+  domain: []
+  range: []
+  description: genre of the work or artist
+- name: year
+  kind: intrinsic
+  domain: []
+  range: []
+  description: year associated with the subject
+- name: director
+  kind: relational
+  domain: []
+  range: []
+  description: director of the work
+- name: orderInOffice
+  kind: intrinsic
+  domain: []
+  range: []
+  description: order in office (e.g. 45th)
+- name: rd1Team
+  kind: relational
+  domain: []
+  range: []
+  description: team in the first round
+- name: regionServed
+  kind: relational
+  domain: []
+  range: []
+  description: region the organization serves
+- name: rev
+  kind: intrinsic
+  domain: []
+  range: []
+  description: revenue figure
+- name: rd2Team
+  kind: relational
+  domain: []
+  range: []
+  description: team in the second round
+- name: siteStadium
+  kind: relational
+  domain: []
+  range: []
+  description: stadium site
+- name: PopulatedPlace/areaTotal
+  kind: intrinsic
+  domain: []
+  range: []
+  description: total area of the populated place
+- name: restingPlace
+  kind: relational
+  domain: []
+  range: []
+  description: resting place (burial location) of the person
+- name: religion
+  kind: intrinsic
+  domain: []
+  range: []
+  description: religion of the person
+- name: manufacturer
+  kind: relational
+  domain: []
+  range: []
+  description: manufacturer of the product
+- name: field
+  kind: intrinsic
+  domain: []
+  range: []
+  description: field of work or study
+- name: knownFor
+  kind: intrinsic
+  domain: []
+  range: []
+  description: what the person is known for
+- name: company
+  kind: relational
+  domain: []
+  range: []
+  description: company
+- name: birthDate
+  kind: intrinsic
+  domain: []
+  range: []
+  description: birth date
+- name: nativeNameLang
+  kind: intrinsic
+  domain: []
+  range: []
+  description: native name lang
+- name: award
+  kind: relational
+  domain: []
+  range: []
+  description: award
+- name: format
+  kind: relational
+  domain: []
+  range: []
+  description: format
+- name: date
+  kind: intrinsic
+  domain: []
+  range: []
+  description: date
+- name: sport
+  kind: relational
+  domain: []
+  range: []
+  description: sport
+- name: opponent
+  kind: relational
+  domain: []
+  range: []
+  description: opponent
+- name: venue
+  kind: relational
+  domain: []
+  range: []
+  description: venue
+- name: deathDate
+  kind: intrinsic
+  domain: []
+  range: []
+  description: death date
+- name: formerBandMember
+  kind: relational
+  domain: []
+  range: []
+  description: former band member
+- name: province
+  kind: relational
+  domain: []
+  range: []
+  description: province
+- name: almaMater
+  kind: relational
+  domain: []
+  range: []
+  description: alma mater
+- name: route
+  kind: relational
+  domain: []
+  range: []
+  description: route
+- name: industry
+  kind: relational
+  domain: []
+  range: []
+  description: industry
+- name: bandMember
+  kind: relational
+  domain: []
+  range: []
+  description: band member
+- name: publisher
+  kind: relational
+  domain: []
+  range: []
+  description: publisher
+- name: literaryGenre
+  kind: intrinsic
+  domain: []
+  range: []
+  description: literary genre
+- name: author
+  kind: relational
+  domain: []
+  range: []
+  description: author
+- name: workplaces
+  kind: relational
+  domain: []
+  range: []
+  description: workplaces
+- name: formerTeam
+  kind: relational
+  domain: []
+  range: []
+  description: former team
+- name: age
+  kind: relational
+  domain: []
+  range: []
+  description: age
+- name: school
+  kind: relational
+  domain: []
+  range: []
+  description: school
+- name: musicalBand
+  kind: relational
+  domain: []
+  range: []
+  description: musical band
+- name: musicalArtist
+  kind: relational
+  domain: []
+  range: []
+  description: musical artist
+- name: background
+  kind: relational
+  domain: []
+  range: []
+  description: background
+- name: party
+  kind: relational
+  domain: []
+  range: []
+  description: party
+- name: event
+  kind: relational
+  domain: []
+  range: []
+  description: event
+- name: goals
+  kind: relational
+  domain: []
+  range: []
+  description: goals
+- name: stadium
+  kind: relational
+  domain: []
+  range: []
+  description: stadium
+- name: education
+  kind: relational
+  domain: []
+  range: []
+  description: education
+- name: years
+  kind: intrinsic
+  domain: []
+  range: []
+  description: years
+- name: commander
+  kind: relational
+  domain: []
+  range: []
+  description: commander
+- name: operator
+  kind: relational
+  domain: []
+  range: []
+  description: operator
+- name: affiliation
+  kind: relational
+  domain: []
+  range: []
+  description: affiliation
+- name: termStart
+  kind: relational
+  domain: []
+  range: []
+  description: term start
+- name: termEnd
+  kind: relational
+  domain: []
+  range: []
+  description: term end
+- name: computingPlatform
+  kind: relational
+  domain: []
+  range: []
+  description: computing platform
+- name: developer
+  kind: relational
+  domain: []
+  range: []
+  description: developer
+- name: released
+  kind: relational
+  domain: []
+  range: []
+  description: released
+- name: class
+  kind: relational
+  domain: []
+  range: []
+  description: class
+- name: founded
+  kind: relational
+  domain: []
+  range: []
+  description: founded
+- name: currentMember
+  kind: relational
+  domain: []
+  range: []
+  description: current member
+- name: builder
+  kind: relational
+  domain: []
+  range: []
+  description: builder
+- name: routeStart
+  kind: relational
+  domain: []
+  range: []
+  description: route start
+- name: routeEnd
+  kind: relational
+  domain: []
+  range: []
+  description: route end
+- name: routeJunction
+  kind: relational
+  domain: []
+  range: []
+  description: route junction
+- name: product
+  kind: relational
+  domain: []
+  range: []
+  description: product
+- name: before
+  kind: relational
+  domain: []
+  range: []
+  description: before
+- name: synonym
+  kind: relational
+  domain: []
+  range: []
+  description: synonym
+- name: time
+  kind: relational
+  domain: []
+  range: []
+  description: time
+- name: keyPerson
+  kind: relational
+  domain: []
+  range: []
+  description: key person
+- name: directedby
+  kind: relational
+  domain: []
+  range: []
+  description: directedby
+- name: highSchool
+  kind: relational
+  domain: []
+  range: []
+  description: high school
+- name: division
+  kind: relational
+  domain: []
+  range: []
+  description: division
+- name: club
+  kind: relational
+  domain: []
+  range: []
+  description: club
+- name: coach
+  kind: relational
+  domain: []
+  range: []
+  description: coach
+- name: height
+  kind: relational
+  domain: []
+  range: []
+  description: height
+- name: after
+  kind: relational
+  domain: []
+  range: []
+  description: after
+- name: attend
+  kind: relational
+  domain: []
+  range: []
+  description: attend
+- name: ship
+  kind: relational
+  domain: []
+  range: []
+  description: ship
+- name: recordLabel
+  kind: relational
+  domain: []
+  range: []
+  description: record label
+- name: studio
+  kind: relational
+  domain: []
+  range: []
+  description: studio
+- name: cinematography
+  kind: relational
+  domain: []
+  range: []
+  description: cinematography
+- name: locmapin
+  kind: relational
+  domain: []
+  range: []
+  description: locmapin
+- name: leader
+  kind: relational
+  domain: []
+  range: []
+  description: leader
+- name: predecessor
+  kind: relational
+  domain: []
+  range: []
+  description: predecessor
+- name: note
+  kind: relational
+  domain: []
+  range: []
+  description: note
+- name: order
+  kind: intrinsic
+  domain: []
+  range: []
+  description: order
+- name: influencedBy
+  kind: relational
+  domain: []
+  range: []
+  description: influenced by
+- name: parent
+  kind: relational
+  domain: []
+  range: []
+  description: parent
+- name: servingRailwayLine
+  kind: relational
+  domain: []
+  range: []
+  description: serving railway line
+- name: architect
+  kind: relational
+  domain: []
+  range: []
+  description: architect
+- name: length
+  kind: relational
+  domain: []
+  range: []
+  description: length
+- name: subdivisionRanks
+  kind: relational
+  domain: []
+  range: []
+  description: subdivision ranks
+- name: campus
+  kind: relational
+  domain: []
+  range: []
+  description: campus
+- name: recordedIn
+  kind: relational
+  domain: []
+  range: []
+  description: recorded in
+- name: owningOrganisation
+  kind: relational
+  domain: []
+  range: []
+  description: owning organisation
+- name: governingBody
+  kind: relational
+  domain: []
+  range: []
+  description: governing body
+- name: instrument
+  kind: relational
+  domain: []
+  range: []
+  description: instrument
+- name: writtenby
+  kind: relational
+  domain: []
+  range: []
+  description: writtenby
+- name: area
+  kind: intrinsic
+  domain: []
+  range: []
+  description: area
+- name: address
+  kind: relational
+  domain: []
+  range: []
+  description: address
+- name: series
+  kind: relational
+  domain: []
+  range: []
+  description: series
+- name: genus
+  kind: relational
+  domain: []
+  range: []
+  description: genus
+- name: successor
+  kind: relational
+  domain: []
+  range: []
+  description: successor
+- name: strength
+  kind: relational
+  domain: []
+  range: []
+  description: strength
+- name: league
+  kind: relational
+  domain: []
+  range: []
+  description: league
+- name: militaryBranch
+  kind: relational
+  domain: []
+  range: []
+  description: military branch
+- name: species
+  kind: relational
+  domain: []
+  range: []
+  description: species

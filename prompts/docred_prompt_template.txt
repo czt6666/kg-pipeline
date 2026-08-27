@@ -1,0 +1,147 @@
+你是一个结构化信息抽取器。从给定文本中抽取实体和关系三元组，输出严格的 JSON。
+
+实体类型只能取以下值：LOC, MISC, NUM, ORG, PER, TIME
+
+关系只能取以下名称，不得自造（按主语类型分组列出，每行一条附一句话说明）：
+[LOC 作为主语时可用]
+- basin country — country that have drainage to/from or border the body of water
+- capital — seat of government of a country, province, state or other type of administrative territorial entity
+- capital of — country, state, department, canton or other administrative division of which the municipality is the governmental seat
+- contains administrative territorial entity — (list of) direct subdivisions of an administrative territorial entity
+- continent — continent of which the subject is a part
+- head of government — head of the executive power of this town, city, municipality, state, country, or other governmental body
+- head of state — official with the highest formal authority in a country/state
+- legislative body — legislative body governing this entity; political institution with elected representatives, such as a parliament/legislature or council
+- located in or next to body of water — body of water on or next to which a place is located
+- mouth of the watercourse — the body of water to which the watercourse drains
+- sister city — twin towns, sister cities, twinned municipalities and other localities that have a partnership or cooperative agreement, either legally or informally acknowledged by their governments
+- territory claimed by — administrative divisions that claim control of a given area
+- unemployment rate — portion of a workforce population that is not employed
+[LOC / MISC 作为主语时可用]
+- located on terrain feature — located on the specified (geo)physical feature. Should not be used when the value is only political/administrative (P131) or a mountain range (P4552). Use P206 for things in/on bodies of water.
+- parent taxon — closest parent taxon of the taxon in question
+- participant — person, group of people or organization (object) that actively takes/took part in an event or process (subject). Preferably qualify with "object has role" (P3831). Use P1923 for participants that are teams.
+- point in time — date something took place, existed or a statement was true; for providing time use the "refine date" property (P4241)
+[LOC / MISC / ORG 作为主语时可用]
+- country — sovereign state that this subject item is in (not to be used for human beings)
+- country of origin — country of origin of this item (creative work, food, phrase, product, etc.)
+- dissolved, abolished or demolished — point in time at which the subject (organisation, building) ceased to exist; see "date of official closure" (P3999) for closing a facility, "service retirement" (P730) for retiring equipment, "discontinued date" (P2669) for stopping a product
+- followed by — immediately following item in a series of which the subject is a part, preferably use as qualifier of P179 [if the subject has been replaced, e.g. political offices, use "replaced by" (P1366)]
+- has part — part of this subject; inverse property of "part of" (P361). See also "has parts of the class" (P2670).
+- headquarters location — city or town where an organization's headquarters is or has been situated. Use P276 qualifier for specific building
+- inception — time when an entity begins to exist; for date of official opening use P1619
+- instance of — type to which this subject corresponds/belongs. Different from P279 (subclass of); for example: K2 is an instance of mountain; volcano is a subclass of mountain
+- location — location of the object, structure or event; use P131 to indicate the containing administrative entity, P8138 for statistical entities, or P706 for geographic entities; use P7153 for locations associated with the object
+- official language — language designated as official by this item
+- operator — person, profession, organization or entity that operates the equipment, facility, or service
+- owned by — owner of the subject
+- replaced by — other person or item which continues the item by replacing it in its role. Use P156 ("followed by") if the item is not replaced nor identical, but adds to the series (e.g. books in a series).
+- replaces — person, state or item replaced. Use "structure replaces" (P1398) for structures. Use "follows" (P155) if the previous item was not replaced or predecessor and successor are identical
+- subclass of — this item is a subclass (subset) of that item; ALL instances of this item are instances of that item; different from P31 (instance of), e.g.: volcano is a subclass of mountain; Everest is an instance of mountain
+[LOC / MISC / ORG / PER 作为主语时可用]
+- conflict — battles, wars or other military engagements in which the person or item participated
+- founded by — founder or co-founder of this organization, religion, place or entity
+- narrative location — the narrative of the work is set in this location
+- part of — object of which the subject is a part (if this subject is already part of object A which is a part of object B, then please only make the subject part of object A), inverse property of "has part" (P527, see also "has parts of the class" (P2670))
+- present in work — this (fictional or fictionalized) entity, place, or person appears in that work as part of the narration (use P2860 for works citing other works, P361/P1433 for works being part of other works, P1343 for entities described in non-fictional accounts)
+[LOC / MISC / ORG / TIME 作为主语时可用]
+- follows — immediately prior item in a series of which the subject is a part, preferably use as qualifier of P179 [if the subject has replaced the preceding item, e.g. political offices, use "replaces" (P1365)]
+[LOC / MISC / PER 作为主语时可用]
+- characters — characters which appear in this item (like plays, operas, operettas, books, comics, films, TV series, video games)
+- creator — maker of this creative work or other object (where no more specific property exists)
+- original language of work — language in which a film or a performance work was originally created. Deprecated for written works and songs; use P407 ("language of work or name") instead.
+[LOC / ORG 作为主语时可用]
+- league — league or competition in which team or player has played, or in which an event occurs
+- located in the administrative territorial entity — the item is located on the territory of the following administrative entity. Use P276 for specifying locations that are non-administrative places and for items about events. Use P1382 if the item falls only partially into the administrative entity
+- separated from — subject was founded or started by separating from identified object
+[LOC / ORG / PER 作为主语时可用]
+- member of — organization, club or musical group to which the subject belongs. Do not use for membership in ethnic or social groups, nor for holding a political position, such as a member of parliament (use P39 for that)
+- participant of — event in which a person, organization or creative work was/is a participant; inverse of P710 or P1923
+- religion — religion of a person, organization or religious building, or associated with this subject
+[LOC / PER 作为主语时可用]
+- child — subject has object as child. Do not use for stepchildren—use "relative" (P1038), qualified with "kinship to subject" (P1039)
+- ethnic group — subject's ethnicity (consensus is that a VERY high standard of proof is needed for this field to be used. In general this means 1) the subject claims it themselves, or 2) it is widely agreed on by scholars, or 3) is fictional and portrayed as such)
+- languages spoken, written or signed — language(s) that a person or a people speaks, writes or signs, including the native language(s)
+[MISC 作为主语时可用]
+- cast member — actor in the subject production [use "character role" (P453) and/or "name of the character role" (P4633) as qualifiers] [use "voice actor" (P725) for voice-only role] - [use "recorded participant" (P11108) for non-fiction productions]
+- composer — person(s) who wrote the music [for lyricist, use "lyrics by" (P676)]
+- developer — organization or person that developed the item
+- director — director(s) of film, TV-series, stageplay, video game or similar
+- lyrics by — author of song lyrics
+- manufacturer — (main or final) manufacturer or producer of this product
+- publication date — date or point in time when a work or product was first published or released
+- screenwriter — person(s) who wrote the script for subject item
+- series — series which contains the subject
+[MISC / ORG 作为主语时可用]
+- applies to jurisdiction — the item (institution, law, public office, public register, etc) or statement belongs to or has power over or applies to the value (a territorial jurisdiction: a country, state, municipality, etc)
+- end time — moment when an entity ceases to exist and a statement stops being entirely valid or no longer be true
+- parent organization — parent organization or unit of an organization or unit, opposite of child organization or unit (P355); use instance of (P31) to distinguish organization (Q43229) and organization unit (Q10387680)
+- producer — person(s) who produced the film, musical work, theatrical production, etc. (for film, this does not include executive producers, associate producers, etc.) [for production company, use P272, video games - use P178]
+- start time — time an entity begins to exist or a statement starts being valid
+[MISC / ORG / PER 作为主语时可用]
+- genre — creative work's genre or an artist's field of work (P101). Use main subject (P921) to relate creative works to their topic
+- influenced by — the subject (person, idea, etc.) was influenced or inspired by this object entity, e.g. "Heidegger was influenced by Aristotle"
+- location of formation — location where a group or organization was formed
+- publisher — organization or person responsible for publishing a work, such as a book, periodical, printed music, podcast, game or software
+- record label — brand and trademark associated with the marketing of subject music recordings and music videos
+[MISC / PER 作为主语时可用]
+- author — main creator(s) of a written work (use on works, not humans); use P2093 (author name string) when Wikidata item is unknown or does not exist
+- award received — award or recognition received by a person, organization or creative work
+- mother — female parent of the subject. For stepmother, use "stepparent" (P3448)
+- original network — network(s) or service(s) that originally broadcast a radio or television program
+- performer — actor, musician, band or other performer associated with this role or musical work
+- platform — platform for which a work was developed or released, or the specific platform version of a software product
+- production company — company that produced this film, audio or performing arts work
+[ORG 作为主语时可用]
+- chairperson — presiding member of an organization, group or body
+- product or material produced — material or product, including services, produced or provided by an organization, industry, facility, or process
+- subsidiary — child organization/unit of an org./unit; usually a fully owned separate org.; for non-independent sub-units, see org. division (P199); opposite of parent org./unit (P749); use instance of (P31) to distinguish org. (Q43229) and org. unit (Q10387680)
+[ORG / PER 作为主语时可用]
+- military branch — branch to which this military unit, award, office, or person belongs, e.g. Royal Navy
+[PER 作为主语时可用]
+- country of citizenship — the object is a country that recognizes the subject as its citizen
+- date of birth — date on which the subject was born
+- date of death — date on which the subject died
+- educated at — educational institution attended by subject
+- employer — person or organization for which the subject works or worked
+- father — male parent of the subject. For stepfather, use "stepparent" (P3448)
+- member of political party — the political party of which a person is or has been a member or otherwise affiliated
+- member of sports team — sports teams or clubs that the subject represents or represented
+- notable work — notable scientific, artistic or literary work, or other work of significance among subject's works
+- place of birth — most specific known birth location of a person, animal or fictional character
+- place of death — most specific known (e.g. city instead of country, or hospital instead of city) death location of a person, animal or fictional character
+- position held — subject currently or formerly holds the object position or public office
+- residence — the place where the person is or has been, resident
+- sibling — the subject and the object have at least one common parent (brother, sister, etc. including half-siblings); use "relative" (P1038) for siblings-in-law (brother-in-law, sister-in-law, etc.) and step-siblings (step-brothers, step-sisters, etc.)
+- spouse — the subject has the object as their spouse (husband, wife, partner, etc.). Use "unmarried partner" (P451) for non-married companions
+- work location — location where persons or organisations were actively participating in employment, business or other work
+
+输出规则：
+1. entities 中每个实体给出 id、name、type、mentions。name 必须是文本中出现过的字面形式，取最完整的一种。mentions 列出该实体在文本中的所有出现形式，包括代词，第一项与 name 相同。
+2. triples 中 head 和 tail 填写 entities 中的 id。
+3. relation 必须逐字取自上方关系列表。
+4. 尽量完整地抽取，宁可多抽不可漏抽。特别是地理归属关系（country、located in the administrative territorial entity、contains administrative territorial entity、continent、located in or next to body of water）：文本中每个地名/组织/事件实体只要存在这些关系都要逐条抽取，不要只抽主要实体；located in the administrative territorial entity 与 contains administrative territorial entity 要成对抽取（A located in B 的同时抽 B contains A），country 关系对每个属于某国家的实体都要抽。
+5. 严格保留原文字面形式，不要归一化或同义替换：文本写 American 就输出 American（不要改成 United States），写 German 就输出 German（不要改成 Germany），写 U.S. 就输出 U.S.。地名/国名的形容词（demonym）形式与名词形式是不同实体，分别输出，不要合并。
+6. 只输出 JSON，不要任何解释，不要 markdown 代码围栏。
+
+示例1
+文本：
+Howard H. Stevenson ( June 27 , 1941 ) is the Sarofim - Rock Baker Foundation Professor Emeritus at Harvard University . Forbes magazine described him as Harvard Business School 's " lion of entrepreneurship " in a 2011 article . Howard is credited with defining entrepreneurship as “ the pursuit of opportunity beyond the resources you currently control . ” INC Magazine described Howard 's definition of entrepreneurship as " the best answer ever . " Stevenson is the author of eight books and 41 articles . His past roles at Harvard include chairman of Harvard Business Publishing , vice provost for resources and planning , and senior associate dean at HBS . He is often credited as being the most successful fundraiser in the history of Harvard University , raising over $ 600 million in philanthropic support for initiatives in business , science , healthcare , and student life . He graduated from Stanford University and Harvard Business School .
+抽取结果：
+{"entities": [{"id": "e1", "name": "Howard H. Stevenson", "type": "PER", "mentions": ["Howard H. Stevenson", "Howard", "Stevenson"]}, {"id": "e2", "name": "Sarofim - Rock Baker Foundation", "type": "ORG", "mentions": ["Sarofim - Rock Baker Foundation"]}, {"id": "e3", "name": "Harvard University", "type": "ORG", "mentions": ["Harvard University", "Harvard"]}, {"id": "e4", "name": "Harvard Business School", "type": "ORG", "mentions": ["Harvard Business School", "HBS"]}, {"id": "e5", "name": "June 27 , 1941", "type": "TIME", "mentions": ["June 27 , 1941"]}, {"id": "e6", "name": "Stanford University", "type": "ORG", "mentions": ["Stanford University"]}], "triples": [{"head": "e1", "relation": "date of birth", "tail": "e5"}, {"head": "e1", "relation": "employer", "tail": "e3"}, {"head": "e1", "relation": "educated at", "tail": "e4"}, {"head": "e3", "relation": "subsidiary", "tail": "e4"}, {"head": "e4", "relation": "parent organization", "tail": "e3"}]}
+
+示例2
+文本：
+Reading is a popular pastime in North Korea , where literacy and books enjoy a high cultural standing , elevated by the regime 's efforts to disseminate propaganda as texts . Because of this , writers are held in high prestige . The partition of Korea following the Second World War led to a considerable cross - border movement , which included writers moving from North to South or from South to North . North Korea 's subsequent literary tradition was shaped and controlled by the State . The " Guidelines for Juche Literature " , published by the official Choson Writers ' Alliance ( ) , emphasised that literature must extoll the country 's leader , Kim Il - sung , and , later , Kim Jong - il . Only members of the Writers ' Alliance are authorised to have their works published .
+抽取结果：
+{"entities": [{"id": "e1", "name": "North Korea", "type": "LOC", "mentions": ["North Korea", "North", "State"]}, {"id": "e2", "name": "Korea", "type": "LOC", "mentions": ["Korea"]}, {"id": "e3", "name": "Second World War", "type": "MISC", "mentions": ["Second World War"]}, {"id": "e4", "name": "South", "type": "LOC", "mentions": ["South"]}, {"id": "e5", "name": "Guidelines for Juche Literature", "type": "MISC", "mentions": ["Guidelines for Juche Literature"]}, {"id": "e6", "name": "Choson Writers ' Alliance", "type": "ORG", "mentions": ["Choson Writers ' Alliance"]}, {"id": "e7", "name": "Kim Il - sung", "type": "PER", "mentions": ["Kim Il - sung"]}, {"id": "e8", "name": "Kim Jong - il", "type": "PER", "mentions": ["Kim Jong - il"]}, {"id": "e9", "name": "Writers ' Alliance", "type": "ORG", "mentions": ["Writers ' Alliance"]}], "triples": [{"head": "e7", "relation": "child", "tail": "e8"}, {"head": "e8", "relation": "father", "tail": "e7"}, {"head": "e1", "relation": "head of state", "tail": "e7"}, {"head": "e1", "relation": "head of state", "tail": "e8"}]}
+
+示例3
+文本：
+James Brown Humphrey , also known as " Professor Jim " Humphrey ( 1859 -1937 ) was a musician , bandleader , and music instructor in New Orleans , Louisiana , United States and central figure in the formation of jazz as a contemporary musical art form . Humphrey predates the jazz genre as an active performer and is not himself considered a jazz musician . However , his involvement in the formal training of large numbers of musicians along the southern plantation belt of the Mississippi River delta during the immediate years following the reconstruction era resulted in many virtuoso performers who would go on to originate jazz as a distinct musical genre . Consequently , he is regarded by some in the jazz aficionado community to be " the grandfather of jazz " .
+抽取结果：
+{"entities": [{"id": "e1", "name": "James Brown Humphrey", "type": "PER", "mentions": ["James Brown Humphrey", "\" Professor Jim \" Humphrey", "Humphrey"]}, {"id": "e2", "name": "1859", "type": "TIME", "mentions": ["1859"]}, {"id": "e3", "name": "New Orleans", "type": "LOC", "mentions": ["New Orleans"]}, {"id": "e4", "name": "Louisiana", "type": "LOC", "mentions": ["Louisiana"]}, {"id": "e5", "name": "United States", "type": "LOC", "mentions": ["United States"]}, {"id": "e6", "name": "Mississippi River", "type": "LOC", "mentions": ["Mississippi River"]}], "triples": [{"head": "e1", "relation": "country of citizenship", "tail": "e5"}, {"head": "e1", "relation": "date of birth", "tail": "e2"}, {"head": "e3", "relation": "country", "tail": "e5"}, {"head": "e4", "relation": "contains administrative territorial entity", "tail": "e3"}, {"head": "e4", "relation": "located in the administrative territorial entity", "tail": "e5"}, {"head": "e4", "relation": "country", "tail": "e5"}, {"head": "e5", "relation": "contains administrative territorial entity", "tail": "e4"}, {"head": "e6", "relation": "country", "tail": "e5"}]}
+
+文本：
+{TEXT}
+抽取结果：
