@@ -34,11 +34,15 @@ class LLMError(RuntimeError):
 
 
 class LLMClient:
-    def __init__(self, cache_dir: Path):
+    def __init__(self, cache_dir: Path, model: str = None):
         cfg = load_config()["llm"]
         self.base_url = os.environ[cfg["base_url_env"]].rstrip("/") + "/"
         self.api_key = os.environ[cfg["api_key_env"]]
-        self.model = os.environ[cfg["model_env"]]
+        # Callers that need a different model than the extraction-pipeline default (e.g. a
+        # smaller/faster one for on-the-fly retrieval summarization) can override it here;
+        # the cache key already includes self.model, so this never collides with the
+        # default model's cache entries.
+        self.model = model or os.environ[cfg["model_env"]]
         self.embedding_model = os.environ[cfg["embedding_model_env"]]
         self.temperature = cfg["temperature"]
         self.max_output_tokens = cfg["max_output_tokens"]
@@ -59,8 +63,16 @@ class LLMClient:
             "Content-Type": "application/json",
         }
 
-    def _cache_key(self, prompt: str, temperature: float, max_tokens: int) -> str:
+    def _cache_key(self, prompt: str, temperature: float, max_tokens: int, cache_salt: str = None) -> str:
         raw = f"{self.model}|{prompt}|{temperature}|{max_tokens}"
+        if cache_salt is not None:
+            # Appended only when the caller opts in (e.g. multi-round sampling needs N
+            # independent calls against an otherwise-identical (model, prompt,
+            # temperature, max_tokens) tuple, which would otherwise collapse onto one
+            # cache entry). Omitting it entirely when unset keeps every pre-existing
+            # cache key byte-identical -- this must never change the hash for existing
+            # callers or it invalidates every cache dir in the repo.
+            raw += f"|{cache_salt}"
         return hashlib.sha256(raw.encode("utf-8")).hexdigest()
 
     def _cache_path(self, key: str) -> Path:
@@ -73,27 +85,39 @@ class LLMClient:
         for attempt in range(self.max_retries + 1):
             try:
                 resp = requests.post(url, headers=headers, json=payload, timeout=self.timeout_s)
-                if resp.status_code == 429 or resp.status_code >= 500:
-                    raise LLMError(f"HTTP {resp.status_code}: {resp.text[:500]}")
-                resp.raise_for_status()
-                return resp
-            except (requests.RequestException, LLMError) as e:
+            except requests.RequestException as e:
                 last_exc = e
-                if attempt == self.max_retries:
-                    break
-                time.sleep(min(delay, self.retry_max_delay_s) + random.uniform(0, 0.5))
-                delay *= 2
+            else:
+                if resp.status_code == 429 or resp.status_code >= 500:
+                    last_exc = LLMError(f"HTTP {resp.status_code}: {resp.text[:500]}")
+                elif resp.status_code >= 400:
+                    # Other 4xx (bad/expired key, malformed request, ...) won't succeed on
+                    # retry -- fail fast instead of burning the whole ~60s retry budget on
+                    # a request that was never going to work.
+                    raise LLMError(f"HTTP {resp.status_code}: {resp.text[:500]}")
+                else:
+                    return resp
+            if attempt == self.max_retries:
+                break
+            time.sleep(min(delay, self.retry_max_delay_s) + random.uniform(0, 0.5))
+            delay *= 2
         raise LLMError(f"request failed after {self.max_retries + 1} attempts: {last_exc}")
 
-    def chat(self, prompt: str, temperature: float = None, max_tokens: int = None) -> dict:
+    def chat(self, prompt: str, temperature: float = None, max_tokens: int = None,
+             cache_salt: str = None) -> dict:
         """Returns the cache record dict (see llm_cache/{sha256}.json schema in DESIGN.md 6).
 
         Uses /v1/messages with thinking disabled (see module docstring) -- max_tokens here
         bounds only the answer, not a reasoning pass.
+
+        cache_salt is mixed into the cache key only -- never sent to the model -- so
+        multi-round sampling (same prompt/temperature/max_tokens, called N times to get
+        N independent completions) can pass cache_salt=f"round{i}" to force N separate
+        network calls instead of N cache hits on the same entry.
         """
         temperature = self.temperature if temperature is None else temperature
         max_tokens = self.max_output_tokens if max_tokens is None else max_tokens
-        key = self._cache_key(prompt, temperature, max_tokens)
+        key = self._cache_key(prompt, temperature, max_tokens, cache_salt)
         cache_path = self._cache_path(key)
         if cache_path.exists():
             return json.loads(cache_path.read_text())

@@ -16,7 +16,27 @@ import { colorForType, labelForType } from "../utils/types.js";
    view. The one bit of visual feedback we do keep is `highlightId`: a plain
    dispatchAction('highlight'/'downplay') with a series-level emphasis.itemStyle —
    no `focus`, no `blur`, no labelLayout involved — so it can't regress into the
-   same bugs. */
+   same bugs.
+
+   Force layout stays live (`layout:'force'`, `draggable:true`,
+   `force.layoutAnimation:true`, the ECharts default) so dragging a node
+   pushes its neighbors around like real physics, not a rigid single-node
+   move — that reactive feel is the point, not a side effect. An earlier
+   version froze the layout into static `layout:'none'` coordinates after the
+   initial settle specifically to make dragging inert (no physics, so nothing
+   could ever thrash) — that version was safer but gave up neighbor reaction
+   entirely, which is the wrong trade for this app. Going back to a live
+   simulation means the initial-settle animation is back too, so it's masked
+   with a plain opacity hide/fade instead of trying to suppress it via
+   `layoutAnimation:false` (toggling that flag between an initial silent pass
+   and a later interactive pass doesn't work — ECharts' force stage handler
+   rebuilds the whole simulation from full-strength friction on every
+   setOption regardless of preserved positions, so flipping the flag just
+   relocates the visible shake to right after the flip instead of removing
+   it). `animation:false` is unrelated and stays on regardless: it kills
+   ECharts' own view re-center/re-scale glide on data changes (a separate
+   animation system from `force.layoutAnimation`), which is what caused a
+   ~500-900ms whole-graph pan on recenter. */
 export const GraphCanvas = memo(function GraphCanvas({ nodes, edges, centerId, onSelectNode, onSelectEdge, highlightId }) {
   const ref = useRef(null);
   const chartRef = useRef(null);
@@ -55,9 +75,13 @@ export const GraphCanvas = memo(function GraphCanvas({ nodes, edges, centerId, o
     // edge's relation label overlaps into unreadable noise.
     const edgeData = edges.map(e => {
       const touches = !centerId || e.head === centerId || e.tail === centerId;
+      // condition is a plain string as of v4_pro prompts; older extractions stored
+      // {"raw": ...} -- normalize here so the tooltip/detail panel don't care which.
+      const condition = typeof e.condition === "string" ? e.condition : e.condition?.raw || null;
       return {
         source: e.head, target: e.tail,
         value: e.relation,
+        _condition: condition,
         label: { show: touches },
         lineStyle: touches
           ? { color: "#94a1b8", opacity: 0.9, width: 1.5 }
@@ -69,7 +93,11 @@ export const GraphCanvas = memo(function GraphCanvas({ nodes, edges, centerId, o
     const chart = chartRef.current || echarts.init(ref.current);
     chartRef.current = chart;
 
+    // animation:false kills ECharts' own view re-center/re-scale glide on data
+    // changes (see file header) — unrelated to force.layoutAnimation below, which
+    // stays true so drag keeps its reactive push-neighbors-away feel.
     chart.setOption({
+      animation: false,
       tooltip: {
         trigger: "item",
         backgroundColor: "rgba(22,26,43,.94)",
@@ -78,7 +106,9 @@ export const GraphCanvas = memo(function GraphCanvas({ nodes, edges, centerId, o
         textStyle: { color: "#f2f3f7", fontSize: 12 },
         formatter: p => p.dataType === "node"
           ? `<b>${p.data.name}</b> · ${p.data._typeLabel}<br/>${p.data._deg} 条关系`
-          : p.data.value,
+          : p.data._condition
+            ? `${p.data.value}<br/><span style="color:#b5bdd0">条件：${p.data._condition}</span>`
+            : p.data.value,
       },
       series: [{
         type: "graph",
@@ -87,7 +117,10 @@ export const GraphCanvas = memo(function GraphCanvas({ nodes, edges, centerId, o
         scaleLimit: { min: 0.3, max: 5 },
         draggable: true,
         cursor: "pointer",
-        force: { repulsion: 190, edgeLength: [45, 170], gravity: 0.12, friction: 0.55 },
+        // initLayout:'circular' seeds nodes on a ring instead of at random so the
+        // simulation has less distance to travel, shortening the settle-in this
+        // component hides behind the opacity fade below.
+        force: { repulsion: 190, edgeLength: [45, 170], gravity: 0.12, friction: 0.55, initLayout: "circular" },
         label: {
           show: true, position: "right", distance: 6, fontSize: 11,
           color: "#3a4157",
@@ -122,14 +155,29 @@ export const GraphCanvas = memo(function GraphCanvas({ nodes, edges, centerId, o
       }],
     }, true);
 
+    // Mask the live settle-in behind an opacity fade instead of suppressing it:
+    // hide the canvas immediately, then fade it in once the layout has had
+    // enough time to visually stop moving. clearTimeout on cleanup so a fast
+    // dataset switch / recenter doesn't fade in a stale, disposed chart.
+    const el = ref.current;
+    el.style.transition = "none";
+    el.style.opacity = "0";
+    const revealTimer = setTimeout(() => {
+      el.style.transition = "opacity 240ms ease";
+      el.style.opacity = "1";
+    }, 450);
+
     chart.off("click");
     chart.on("click", params => {
       if (params.dataType === "node") onSelectRef.current(params.data.id);
       else if (params.dataType === "edge" && onSelectEdgeRef.current)
-        onSelectEdgeRef.current({ head: params.data.source, tail: params.data.target, relation: params.data.value });
+        onSelectEdgeRef.current({
+          head: params.data.source, tail: params.data.target,
+          relation: params.data.value, condition: params.data._condition,
+        });
     });
 
-    return () => { chart.dispose(); chartRef.current = null; };
+    return () => { clearTimeout(revealTimer); chart.dispose(); chartRef.current = null; };
   }, [nodes, edges, centerId]);
 
   // Plain highlight/downplay dispatchAction — lightweight (update:'none'), doesn't

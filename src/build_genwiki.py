@@ -18,6 +18,7 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 from common import REPO_ROOT, read_jsonl, write_jsonl
+from prompt_builder import PromptBuilder
 
 # (property, kind, description) — kind: intrinsic = stored as node attribute, relational = edge.
 # Descriptions are concise glosses for the LLM prompt.
@@ -223,44 +224,54 @@ def build_fewshot():
     return out
 
 
-def build_prompt(fewshot):
-    import yaml
-    schema = yaml.safe_load(open(REPO_ROOT / "schema/genwiki_schema.yaml"))
-    rels_by_kind = defaultdict(list)
-    for r in schema["relations"]:
-        rels_by_kind[r["kind"]].append((r["name"], r["description"]))
-    lines = []
-    lines.append("你是一个结构化信息抽取器。从给定文本中抽取实体和关系三元组，输出严格的 JSON。")
-    lines.append("")
-    lines.append("实体类型只能取以下值：PER, ORG, LOC, TIME, NUM, MISC")
-    lines.append("")
-    lines.append("关系只能取以下名称，不得自造（每行一条附一句话说明）：")
-    for kind in ["relational", "intrinsic"]:
-        label = "实体间关系" if kind == "relational" else "属性/字面量关系"
-        lines.append(f"[{label}]")
-        for n, d in rels_by_kind[kind]:
-            lines.append(f"- {n} — {d}")
-    lines.append("")
-    lines.append("输出规则：")
-    lines.append("1. entities 中每个实体给出 id、name、type、mentions。name 必须使用文本中出现的字面形式。")
-    lines.append("2. triples 中 head 和 tail 填写 entities 中的 id。")
-    lines.append("3. relation 必须逐字取自上方关系列表。")
-    lines.append("4. 尽量完整地抽取：文本中每个实体对/属性只要存在对应关系都要抽，宁可多抽不可漏抽。")
-    lines.append("5. 只输出 JSON，不要任何解释，不要 markdown 代码围栏。")
-    lines.append("")
-    for i, ex in enumerate(fewshot, 1):
-        lines.append(f"示例{i}")
-        lines.append("文本：")
-        lines.append(ex["text"])
-        lines.append("抽取结果：")
-        lines.append(json.dumps(ex["output"], ensure_ascii=False))
+class GenWikiPromptBuilder(PromptBuilder):
+    """Same load/write/report skeleton as build_tcm_prompt.py / build_docred_prompt.py
+    (see prompt_builder.PromptBuilder); only render() differs, grouping relations by
+    kind (relational vs intrinsic) rather than by domain (DocRED) or a markdown table
+    (TCM)."""
+    schema_path = REPO_ROOT / "schema/genwiki_schema.yaml"
+    fewshot_path = REPO_ROOT / "prompts/genwiki_fewshot.json"
+    out_path = REPO_ROOT / "prompts/genwiki_prompt_template.txt"
+
+    def load_fewshot(self):
+        # genwiki_fewshot.json is written via write_jsonl (see build_fewshot() above),
+        # i.e. one JSON object per line despite the .json extension -- not a JSON array.
+        return list(read_jsonl(self.fewshot_path))
+
+    def render(self, schema, fewshot):
+        rels_by_kind = defaultdict(list)
+        for r in schema["relations"]:
+            rels_by_kind[r["kind"]].append((r["name"], r["description"]))
+        lines = []
+        lines.append("你是一个结构化信息抽取器。从给定文本中抽取实体和关系三元组，输出严格的 JSON。")
         lines.append("")
-    lines.append("文本：")
-    lines.append("{TEXT}")
-    lines.append("抽取结果：")
-    template = "\n".join(lines)
-    (REPO_ROOT / "prompts/genwiki_prompt_template.txt").write_text(template, encoding="utf-8")
-    print(f"wrote prompts/genwiki_prompt_template.txt ({len(template)} chars)")
+        lines.append("实体类型只能取以下值：PER, ORG, LOC, TIME, NUM, MISC")
+        lines.append("")
+        lines.append("关系只能取以下名称，不得自造（每行一条附一句话说明）：")
+        for kind in ["relational", "intrinsic"]:
+            label = "实体间关系" if kind == "relational" else "属性/字面量关系"
+            lines.append(f"[{label}]")
+            for n, d in rels_by_kind[kind]:
+                lines.append(f"- {n} — {d}")
+        lines.append("")
+        lines.append("输出规则：")
+        lines.append("1. entities 中每个实体给出 id、name、type、mentions。name 必须使用文本中出现的字面形式。")
+        lines.append("2. triples 中 head 和 tail 填写 entities 中的 id。")
+        lines.append("3. relation 必须逐字取自上方关系列表。")
+        lines.append("4. 尽量完整地抽取：文本中每个实体对/属性只要存在对应关系都要抽，宁可多抽不可漏抽。")
+        lines.append("5. 只输出 JSON，不要任何解释，不要 markdown 代码围栏。")
+        lines.append("")
+        for i, ex in enumerate(fewshot, 1):
+            lines.append(f"示例{i}")
+            lines.append("文本：")
+            lines.append(ex["text"])
+            lines.append("抽取结果：")
+            lines.append(json.dumps(ex["output"], ensure_ascii=False))
+            lines.append("")
+        lines.append("文本：")
+        lines.append("{TEXT}")
+        lines.append("抽取结果：")
+        return "\n".join(lines)
 
 
 def main():
@@ -270,8 +281,8 @@ def main():
     args = ap.parse_args()
     build_schema()
     build_docs_gold(args.split, args.limit)
-    fewshot = build_fewshot()
-    build_prompt(fewshot)
+    build_fewshot()
+    GenWikiPromptBuilder().build()
 
 
 if __name__ == "__main__":

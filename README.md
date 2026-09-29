@@ -73,6 +73,14 @@ cd web && npm run dev
 # 浏览器打开 http://localhost:5173，同时保持 src/serve.py 在 8787 运行
 ```
 
+部署到生产服务器（czt666.cn/kg/，nginx 反代到 127.0.0.1:8787，kg-pipeline.service 管理进程）：
+
+```bash
+./deploy.sh              # 同步代码 + 前端构建产物，重启服务
+./deploy.sh --data       # 追加同步 data/work/（跑完新的 pipeline 阶段后才需要，较慢）
+./deploy.sh --env        # 追加同步 .env（换了 API key 才需要）
+```
+
 三个面板：原文视图（mentions 坐标高亮、点击反查实体）· 图谱视图（vis-network 节点/边，
 点击节点看属性）· 检索面板（语义检索 + 词法匹配 + 图搜索 BFS 三路并排）。
 

@@ -50,15 +50,26 @@ def collect_splits(dataset: str) -> list[str]:
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--dataset", default="docred")
+    ap.add_argument("--splits", default=None,
+                     help="comma-separated split names to merge, overriding auto-discovery "
+                          "(needed when a dataset has multiple re-extraction attempts over "
+                          "the same source docs, e.g. TCM's neike_trial/_v2/_v2_pro, which "
+                          "collect_splits() can't tell apart from genuinely distinct splits)")
+    ap.add_argument("--out", default="merged",
+                     help="output dir name under data/work/{dataset}/, default 'merged' -- "
+                          "override when one dataset holds multiple independently-merged book/"
+                          "corpus graphs (e.g. TCM's neike/jichu/zhenduan, each merged "
+                          "separately via --splits neike --out merged_neike) rather than one "
+                          "single merged graph per dataset")
     args = ap.parse_args()
 
-    splits = collect_splits(args.dataset)
+    splits = args.splits.split(",") if args.splits else collect_splits(args.dataset)
     if not splits:
         print(f"[{args.dataset}] no splits with nodes.jsonl found; nothing to merge.")
         return
-    print(f"[{args.dataset}] merging splits: {splits}")
+    print(f"[{args.dataset}] merging splits into {args.out}: {splits}")
 
-    wd = work_dir(args.dataset, "merged")
+    wd = work_dir(args.dataset, args.out)
 
     all_nodes, all_edges = [], []
     docs_by_id = {}
@@ -117,16 +128,21 @@ def main():
         h, t = old_to_new.get(e["head"]), old_to_new.get(e["tail"])
         if h is None or t is None:
             continue
-        key = (h, e["relation"], t)
+        # condition is part of the dedup key (not just h/relation/tail): for 加药/减药/
+        # 加方/换方/变证 the same (head, relation, tail) can recur under genuinely
+        # different 随证加减 trigger conditions, and dropping condition here would both
+        # silently lose that text and wrongly collapse distinct accessory triples into
+        # one edge (see stage4_build_graph.py's per-doc dedup for the same reasoning).
+        key = (h, e["relation"], t, e.get("condition"))
         edge_sources[key].add(e["doc_id"])
         edge_pid.setdefault(key, e.get("pid"))
     merged_edges = [
         {
             "edge_id": f"m#e{i}", "head": h, "relation": rel, "pid": edge_pid[key],
-            "tail": t, "source_doc_ids": sorted(srcs),
+            "tail": t, "condition": condition, "source_doc_ids": sorted(srcs),
         }
-        for i, (key, srcs) in enumerate(sorted(edge_sources.items()))
-        for (h, rel, t) in [key]
+        for i, (key, srcs) in enumerate(sorted(edge_sources.items(), key=lambda kv: tuple(x or "" for x in kv[0])))
+        for (h, rel, t, condition) in [key]
     ]
 
     write_jsonl(wd / "docs.jsonl", sorted(docs_by_id.values(), key=lambda d: d["doc_id"]))

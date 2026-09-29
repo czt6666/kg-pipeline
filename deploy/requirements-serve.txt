@@ -1,0 +1,20 @@
+# Pinned deps for the *serving* runtime only (src/serve.py + retrieval/ + agent/),
+# installed into each release's own .venv on the server via `uv pip install -r`.
+# This is NOT the local dev environment's dependency list -- stage0-stage7,
+# preprocess/, eval/ scripts, etc. need a much heavier local venv (torch,
+# datasets, bert-score, pdfplumber, pyobjc for macOS OCR, ...) that never runs
+# on the server and has no tracked requirements file (see README.md for local
+# setup). Regenerate by installing just these five top-level packages into a
+# clean venv and running `uv pip freeze`:
+#   faiss-cpu, numpy, pyyaml, requests, tiktoken
+certifi==2026.7.22
+charset-normalizer==3.5.1
+faiss-cpu==1.13.0
+idna==3.19
+numpy==2.0.2
+packaging==26.3
+PyYAML==6.0.3
+regex==2026.1.15
+requests==2.32.5
+tiktoken==0.14.0
+urllib3==2.6.3

@@ -9,11 +9,15 @@ import { useResizer } from "../hooks/useResizer.js";
 import { getJSON } from "../utils/api.js";
 import { colorForType, labelForType } from "../utils/types.js";
 import { buildAdjacency, egoSubgraph } from "../utils/graph.js";
+import { mergeKey, mergeLabel } from "../utils/merged.js";
 
 /* ---------- 完整知识图谱 ---------- */
 export function GraphExplorer() {
   const [mergedList, setMergedList] = useState([]);
-  const [dataset, setDataset] = useState(null);
+  // a dataset can hold several independently-merged graphs (see utils/merged.js) --
+  // selectedKey is `${dataset}::${merge}` so distinct graphs of the same dataset
+  // (e.g. TCM's merged_neike/merged_jichu/merged_zhenduan) are distinguishable
+  const [selectedKey, setSelectedKey] = useState(null);
   const [graph, setGraph] = useState({ stats:{}, nodes:[], edges:[] });
   const [loading, setLoading] = useState(true);
   const [focusId, setFocusId] = useState(null);
@@ -26,23 +30,32 @@ export function GraphExplorer() {
   const [docMatch, setDocMatch] = useState([]);
   const [docLoading, setDocLoading] = useState(false);
   const [typeFacet, setTypeFacet] = useState("ALL");
-  const [query, setQuery] = useState("");
-  const [searchResults, setSearchResults] = useState(null);
-  const [searching, setSearching] = useState(false);
   const [leftW, leftDrag] = useResizer(280, { min: 220, max: 480 });
   const [rightW, rightDrag] = useResizer(340, { min: 260, max: 560, invert: true });
+  const [searchTerm, setSearchTerm] = useState("");
+  const [searching, setSearching] = useState(false);
+  const [searchResults, setSearchResults] = useState(null);
+  // Recenter history: selectFocus pushes the *previous* focus here before jumping, so
+  // "← 返回" can walk back through a whole chain of jumps, not just undo the last one.
+  const [focusStack, setFocusStack] = useState([]);
 
   useEffect(() => {
     getJSON("/api/merged").then(list => {
       setMergedList(list);
-      if (list.length) setDataset(list[0].dataset);
+      if (list.length) setSelectedKey(mergeKey(list[0]));
     });
   }, []);
 
+  const selected = useMemo(() => mergedList.find(m => mergeKey(m) === selectedKey) || null, [mergedList, selectedKey]);
+  const dataset = selected?.dataset ?? null;
+  const merge = selected?.merge || "merged";
+  const basePath = dataset ? `/api/merged/${dataset}/${merge}` : null;
+
   useEffect(() => {
-    if (!dataset) return;
-    setLoading(true); setFocusId(null); setSelectedId(null); setDetail(null); setSelectedEdge(null); setSearchResults(null); setSearching(false); setQuery(""); setTypeFacet("ALL"); setDocView(null);
-    getJSON(`/api/merged/${dataset}`).then(g => {
+    if (!basePath) return;
+    setLoading(true); setFocusId(null); setSelectedId(null); setDetail(null); setSelectedEdge(null); setTypeFacet("ALL"); setDocView(null);
+    setSearchResults(null); setSearchTerm(""); setFocusStack([]);
+    getJSON(basePath).then(g => {
       setGraph(g);
       setLoading(false);
       const deg = {};
@@ -51,7 +64,7 @@ export function GraphExplorer() {
       for (const n of g.nodes) { const d = deg[n.entity_id]||0; if (d > topDeg) { topDeg = d; top = n.entity_id; } }
       if (top) { setFocusId(top); setSelectedId(top); }
     });
-  }, [dataset]);
+  }, [basePath]);
 
   const nodesById = useMemo(() => new Map(graph.nodes.map(n => [n.entity_id, n])), [graph]);
   const degree = useMemo(() => {
@@ -86,13 +99,27 @@ export function GraphExplorer() {
 
   const loadDetail = useCallback(id => {
     setDetail(null); setSelectedEdge(null);
-    getJSON(`/api/merged/${dataset}/node/${encodeURIComponent(id)}`).then(setDetail);
-  }, [dataset]);
+    getJSON(`${basePath}/node/${encodeURIComponent(id)}`).then(setDetail);
+  }, [basePath]);
+  // Raw recenter (no stack bookkeeping) -- shared by selectFocus (pushes first) and
+  // goBack (pops instead of pushing) so the actual "move the focus" logic lives once.
+  const goToFocus = useCallback(id => {
+    setFocusId(id); setSelectedId(id); loadDetail(id);
+  }, [loadDetail]);
   // Recenter: rebuilds the ego subgraph around id (used by sidebar/search navigation
   // and the explicit "设为中心" action — a deliberate jump, not an accidental one).
   const selectFocus = useCallback(id => {
-    setFocusId(id); setSelectedId(id); loadDetail(id);
-  }, [loadDetail]);
+    setFocusStack(prev => (focusId && focusId !== id) ? [...prev, focusId] : prev);
+    goToFocus(id);
+  }, [goToFocus, focusId]);
+  // Pops the last pushed focus and jumps back to it, without re-pushing the current one.
+  const goBack = useCallback(() => {
+    setFocusStack(prev => {
+      if (!prev.length) return prev;
+      goToFocus(prev[prev.length - 1]);
+      return prev.slice(0, -1);
+    });
+  }, [goToFocus]);
   // Inspect: highlights id within the *current* subgraph without recentering it —
   // used when clicking a node directly in the canvas, so the view never jumps.
   // Also useCallback'd (stable ref) so GraphCanvas — memo()'d, and the heaviest
@@ -106,21 +133,30 @@ export function GraphExplorer() {
   const inspectEdge = useCallback(e => {
     setSelectedEdge(e); setDetail(null);
   }, []);
+
+  // Reuses the hybrid retrieval module (lexical + semantic + graph fusion) just for
+  // name resolution here -- expand=0 skips graph-pattern search/LLM summarization
+  // (that belongs to the 检索 page), this only needs a ranked candidate list to jump to.
   const runSearch = () => {
-    if (!query.trim()) { setSearchResults(null); return; }
+    if (!searchTerm.trim() || !dataset) return;
     setSearching(true);
-    getJSON(`/api/merged/${dataset}/search?q=${encodeURIComponent(query)}&top_k=15`)
-      .then(r => { setSearchResults(r); setSearching(false); });
+    getJSON(`/api/retrieval/search?dataset=${dataset}&merge=${merge}&term=${encodeURIComponent(searchTerm.trim())}&top_k=10&expand=0`)
+      .then(r => { setSearchResults(r.candidates); setSearching(false); })
+      .catch(() => setSearching(false));
+  };
+  const pickSearchResult = (entityId) => {
+    selectFocus(entityId);
+    setSearchResults(null);
+    setSearchTerm("");
   };
   const openDoc = (doc_id, matchNames) => {
     setDocMatch(matchNames); setDocLoading(true); setDocView(null);
-    getJSON(`/api/merged/${dataset}/doc/${encodeURIComponent(doc_id)}`).then(d => { setDocView(d); setDocLoading(false); });
+    getJSON(`${basePath}/doc/${encodeURIComponent(doc_id)}`).then(d => { setDocView(d); setDocLoading(false); });
   };
   const closeDoc = () => { setDocView(null); setDocLoading(false); };
 
   const stats = graph.stats || {};
   const typeCounts = stats.type_counts || {};
-  const relationCounts = Object.entries(stats.relation_counts || {}).slice(0, 8);
   const focusNode = focusId ? nodesById.get(focusId) : null;
   const selectedNode = selectedId ? nodesById.get(selectedId) : null;
 
@@ -129,10 +165,26 @@ export function GraphExplorer() {
       <TopBar route="graph" />
       <div className="explorer">
         <div className="explorer-top">
-          <div className="dataset-pills">
+          <select className="dataset-select" value={selectedKey || ""} onChange={e => setSelectedKey(e.target.value)}>
             {mergedList.map(m => (
-              <button key={m.dataset} className={"pill" + (m.dataset === dataset ? " active" : "")} onClick={() => setDataset(m.dataset)}>{m.dataset}</button>
+              <option key={mergeKey(m)} value={mergeKey(m)}>{mergeLabel(m)}</option>
             ))}
+          </select>
+          <div className="search-box" style={{ position: "relative" }}>
+            <input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="搜索实体，如 感冒 / 麻黄汤"
+                   onKeyDown={e => e.key === "Enter" && runSearch()} disabled={searching} style={{ width:200 }} />
+            <button className="primary" onClick={runSearch} disabled={searching}>{searching ? "…" : "搜索"}</button>
+            {searchResults && (
+              <div className="res-box" style={{ position: "absolute", top: "100%", left: 0, zIndex: 10, width: 280, marginTop: 4 }}>
+                {searchResults.length === 0 ? (
+                  <div className="hint" style={{ padding: 8 }}>未命中任何实体。</div>
+                ) : searchResults.map(c => (
+                  <div key={c.entity_id} className="res-item clickable" onClick={() => pickSearchResult(c.entity_id)}>
+                    <span><b style={{ color: colorForType(c.type) }}>{c.name}</b><span className="muted"> （{labelForType(c.type)}）</span></span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
           <div className="stats-row">
             <StatTile label="实体" value={stats.n_nodes ?? "—"} />
@@ -147,100 +199,31 @@ export function GraphExplorer() {
         <div className="explorer-body" style={{ gridTemplateColumns: `${leftW}px 6px 1fr 6px ${rightW}px` }}>
           <aside className="rail">
             <div>
-              <h3>搜索实体</h3>
-              <div className="search-box">
-                <input value={query} onChange={e => setQuery(e.target.value)} placeholder="如 United Kingdom"
-                       onKeyDown={e => e.key === "Enter" && runSearch()} disabled={searching} />
-                <button className="primary" onClick={runSearch} disabled={searching}>{searching ? "搜索中…" : "搜"}</button>
+              <h3>热门实体（按连接数排序）</h3>
+              <div className="rank-list">
+                {hubList.map(n => (
+                  <div key={n.entity_id} className={"rank-item" + (n.entity_id === selectedId ? " active" : "")} onClick={() => selectFocus(n.entity_id)}>
+                    <span className="dot" style={{ background: colorForType(n.type) }} />
+                    <span className="name">{n.name}</span>
+                    <span className="metric">{degree.get(n.entity_id) || 0}</span>
+                  </div>
+                ))}
               </div>
             </div>
-
-            {searching ? (
-              <div className="hint">检索中…</div>
-            ) : searchResults ? (
-              <div>
-                <div className="rail-row-head">
-                  <h3>检索结果</h3>
-                  <button className="link" onClick={() => { setSearchResults(null); setQuery(""); }}>清除 ×</button>
-                </div>
-                <div className="hint" style={{ marginBottom:8 }}>点击任意结果聚焦该实体并查看详情。</div>
-                <div className="res-box">
-                  <h3>语义检索 · 节点</h3>
-                  {searchResults.semantic.nodes.map(n => (
-                    <div key={n.entity_id} className={"res-item clickable" + (n.entity_id === selectedId ? " active" : "")} onClick={() => selectFocus(n.entity_id)}>
-                      <b style={{ color: colorForType(n.type) }}>{n.name}</b> <span className="score">{(n.score*100).toFixed(0)}%</span>
-                    </div>
-                  ))}
-                  {searchResults.semantic.nodes.length === 0 && <div className="hint">无匹配结果</div>}
-                </div>
-                {searchResults.semantic.passages?.length > 0 && (
-                  <div className="res-box">
-                    <h3>语义检索 · 段落</h3>
-                    {searchResults.semantic.passages.map((p, i) => (
-                      <div key={i} className="res-item">{p.text.slice(0, 60)}… <span className="score">{(p.score*100).toFixed(0)}%</span></div>
-                    ))}
-                  </div>
-                )}
-                <div className="res-box">
-                  <h3>词法匹配</h3>
-                  {searchResults.lexical.map(n => (
-                    <div key={n.entity_id} className={"res-item clickable" + (n.entity_id === selectedId ? " active" : "")} onClick={() => selectFocus(n.entity_id)}>
-                      <b style={{ color: colorForType(n.type) }}>{n.name}</b> <span className="score">{(n.score*100).toFixed(0)}%</span>
-                    </div>
-                  ))}
-                  {searchResults.lexical.length === 0 && <div className="hint">无匹配结果</div>}
-                </div>
-                <div className="res-box">
-                  <h3>图搜索 · 关系事实</h3>
-                  {(() => {
-                    const gmap = Object.fromEntries(searchResults.graph.nodes.map(n => [n.entity_id, n]));
-                    const triples = searchResults.graph.edges.map(e => ({ ...e, h: gmap[e.head], t: gmap[e.tail] })).filter(e => e.h && e.t);
-                    return triples.length > 0 ? triples.slice(0, 20).map((e, i) => (
-                      <div className="res-item clickable" key={i} onClick={() => selectFocus(e.h.entity_id)}>
-                        <span>
-                          <b style={{ color: colorForType(e.h.type) }}>{e.h.name}</b>
-                          <span className="muted"> —{e.relation}→ </span>
-                          <b style={{ color: colorForType(e.t.type) }}>{e.t.name}</b>
-                        </span>
-                      </div>
-                    )) : <div className="hint">未从命中实体扩展出新关系</div>;
-                  })()}
-                </div>
-              </div>
-            ) : (
-              <div>
-                <h3>热门实体（按连接数排序）</h3>
-                <div className="rank-list">
-                  {hubList.map(n => (
-                    <div key={n.entity_id} className={"rank-item" + (n.entity_id === selectedId ? " active" : "")} onClick={() => selectFocus(n.entity_id)}>
-                      <span className="dot" style={{ background: colorForType(n.type) }} />
-                      <span className="name">{n.name}</span>
-                      <span className="metric">{degree.get(n.entity_id) || 0}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
 
             <div>
               <h3>实体类型分布（点击筛选）</h3>
               <TypeBarChart counts={typeCounts} active={typeFacet} onPick={t => setTypeFacet(t === typeFacet ? "ALL" : t)} />
             </div>
-
-            {relationCounts.length > 0 && (
-              <div>
-                <h3>常见关系</h3>
-                <div className="chips">
-                  {relationCounts.map(([rel, c]) => <span className="chip" key={rel}>{rel} <b>{c}</b></span>)}
-                </div>
-              </div>
-            )}
           </aside>
 
           <ResizeHandle onMouseDown={leftDrag} />
 
           <section className="canvas-col">
             <div className="canvas-toolbar">
+              {focusStack.length > 0 && (
+                <button className="link" onClick={goBack} style={{ marginRight: 10 }}>← 返回</button>
+              )}
               {focusNode
                 ? <span className="focus-label">聚焦 <b style={{ color: colorForType(focusNode.type) }}>{focusNode.name}</b> <span className="muted">（{labelForType(focusNode.type)}）</span></span>
                 : <span className="muted">从左侧选择实体查看其关系网络</span>}
@@ -277,6 +260,9 @@ export function GraphExplorer() {
                 <div className="detail">
                   <div className="detail-head">关系详情</div>
                   <div className="row"><span className="k">关系</span>{selectedEdge.relation}</div>
+                  {selectedEdge.condition && (
+                    <div className="row"><span className="k">触发条件</span>{selectedEdge.condition}</div>
+                  )}
                   <div className="row">
                     <span className="k">头实体</span>
                     <span style={{ color: colorForType(h?.type) }}>{h?.name || selectedEdge.head}</span>
@@ -345,7 +331,7 @@ export function GraphExplorer() {
               <button className="link" onClick={closeDoc}>← 返回</button>
               <span className="modal-title">{docView ? `${docView.doc_id}${docView.title ? " · " + docView.title : ""}` : "加载中…"}</span>
               <div className="spacer" />
-              {docView && <span className="muted">来源切分：{dataset}/{docView.split}</span>}
+              {docView && <span className="muted">来源切分：{selected ? mergeLabel(selected) : dataset}/{docView.split}</span>}
             </div>
             {docLoading || !docView
               ? <div className="empty">加载文档抽取结果…</div>

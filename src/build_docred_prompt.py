@@ -4,16 +4,15 @@ The relation list and few-shot examples are baked into the template file as stat
 (not re-rendered per request) so that the prompt prefix is byte-identical across calls,
 which is what DESIGN.md 2.3 means by "关系列表顺序固定，样例固定，以便网关 prefix cache 命中".
 The only remaining runtime placeholder is {{TEXT}}.
+
+Shared load/write/report plumbing lives in prompt_builder.PromptBuilder; this module
+only supplies the DocRED-specific `render()`.
 """
 import json
 from collections import defaultdict
 from pathlib import Path
 
-import yaml
-
-SCHEMA_PATH = Path("schema/docred_schema.yaml")
-FEWSHOT_PATH = Path("prompts/docred_fewshot.json")
-OUT_PATH = Path("prompts/docred_prompt_template.txt")
+from prompt_builder import PromptBuilder
 
 
 def render_relation_list(relations):
@@ -37,15 +36,17 @@ def render_fewshot(examples):
     return "\n\n".join(blocks)
 
 
-def main():
-    schema = yaml.safe_load(SCHEMA_PATH.read_text())
-    fewshot = json.loads(FEWSHOT_PATH.read_text())
+class DocREDPromptBuilder(PromptBuilder):
+    schema_path = Path("schema/docred_schema.yaml")
+    fewshot_path = Path("prompts/docred_fewshot.json")
+    out_path = Path("prompts/docred_prompt_template.txt")
 
-    entity_types = ", ".join(schema["entity_types"])
-    relation_list = render_relation_list(schema["relations"])
-    fewshot_block = render_fewshot(fewshot)
+    def render(self, schema, fewshot):
+        entity_types = ", ".join(schema["entity_types"])
+        relation_list = render_relation_list(schema["relations"])
+        fewshot_block = render_fewshot(fewshot)
 
-    template = f"""你是一个结构化信息抽取器。从给定文本中抽取实体和关系三元组，输出严格的 JSON。
+        return f"""你是一个结构化信息抽取器。从给定文本中抽取实体和关系三元组，输出严格的 JSON。
 
 实体类型只能取以下值：{entity_types}
 
@@ -66,9 +67,6 @@ def main():
 抽取结果：
 """
 
-    OUT_PATH.write_text(template)
-    print(f"wrote {OUT_PATH} ({len(template)} chars, ~{len(template)//4} tokens est.)")
-
 
 if __name__ == "__main__":
-    main()
+    DocREDPromptBuilder().build()

@@ -9,15 +9,14 @@ Unlike docred/genwiki (flat entity-type list, grouped-bullet relation list), the
 schema carries richer per-type prompt text (prompt_line) and a markdown relation table
 (with a "常见文本线索" cues column) -- this generalizes across multiple TCM document
 genres (教材/方书/本草/医论), not just one disease-entry textbook layout.
+
+Shared load/write/report plumbing lives in prompt_builder.PromptBuilder; this module
+only supplies the TCM-specific `render()`.
 """
 import json
 from pathlib import Path
 
-import yaml
-
-SCHEMA_PATH = Path("schema/tcm_schema.yaml")
-FEWSHOT_PATH = Path("prompts/tcm_fewshot.json")
-OUT_PATH = Path("prompts/tcm_prompt_template.txt")
+from prompt_builder import PromptBuilder
 
 
 def render_entity_types(schema):
@@ -44,17 +43,19 @@ def render_fewshot(examples):
     return "\n\n".join(blocks)
 
 
-def main():
-    schema = yaml.safe_load(SCHEMA_PATH.read_text())
-    fewshot = json.loads(FEWSHOT_PATH.read_text())
+class TCMPromptBuilder(PromptBuilder):
+    schema_path = Path("schema/tcm_schema.yaml")
+    fewshot_path = Path("prompts/tcm_fewshot.json")
+    out_path = Path("prompts/tcm_prompt_template.txt")
 
-    n_types = len(schema["entity_types"])
-    n_rels = len(schema["relations"])
-    entity_block = render_entity_types(schema)
-    relation_table = render_relation_table(schema["relations"])
-    fewshot_block = render_fewshot(fewshot)
+    def render(self, schema, fewshot):
+        n_types = len(schema["entity_types"])
+        n_rels = len(schema["relations"])
+        entity_block = render_entity_types(schema)
+        relation_table = render_relation_table(schema["relations"])
+        fewshot_block = render_fewshot(fewshot)
 
-    template = f"""你是一个中医药文献结构化信息抽取器。从给定的中医文献正文片段（教材、方书、本草、医论等）中抽取实体和关系三元组，输出严格的 JSON。
+        return f"""你是一个中医药文献结构化信息抽取器。从给定的中医文献正文片段（教材、方书、本草、医论等）中抽取实体和关系三元组，输出严格的 JSON。
 
 ## 一、实体类型（type 只能取以下 {n_types} 个值）
 
@@ -98,9 +99,6 @@ def main():
 抽取结果：
 """
 
-    OUT_PATH.write_text(template)
-    print(f"wrote {OUT_PATH} ({len(template)} chars, ~{len(template)//4} tokens est.)")
-
 
 if __name__ == "__main__":
-    main()
+    TCMPromptBuilder().build()

@@ -32,8 +32,9 @@ def try_parse(raw_text: str):
             return None, None, f"json_repair_failed: {e2}"
 
 
-def extract_one(client: LLMClient, prompt: str):
-    record = client.chat(prompt)
+def extract_one(client: LLMClient, prompt: str, max_tokens: int = None, temperature: float = None,
+                 cache_salt: str = None):
+    record = client.chat(prompt, max_tokens=max_tokens, temperature=temperature, cache_salt=cache_salt)
     parsed, method, err = try_parse(record["response_raw"])
     if parsed is not None:
         return record, parsed, method, None
@@ -43,7 +44,7 @@ def extract_one(client: LLMClient, prompt: str):
         prompt
         + f"\n\n上一次的输出无法解析为 JSON（错误：{err}）。请只输出严格合法的 JSON，不要任何解释或代码围栏，重新生成。"
     )
-    record2 = client.chat(retry_prompt)
+    record2 = client.chat(retry_prompt, max_tokens=max_tokens, temperature=temperature, cache_salt=cache_salt)
     parsed2, method2, err2 = try_parse(record2["response_raw"])
     if parsed2 is not None:
         return record2, parsed2, "retried", None
@@ -56,19 +57,37 @@ def main():
     ap.add_argument("--split", default="dev")
     ap.add_argument("--limit", type=int, default=None)
     ap.add_argument("--workers", type=int, default=12, help="concurrent LLM requests")
+    ap.add_argument("--prompt", default=None,
+                     help="override prompt template path (default: prompts/{dataset}_prompt_template.txt)")
+    ap.add_argument("--max-tokens", type=int, default=None,
+                     help="override max_output_tokens for this run only (doesn't touch config.yaml "
+                          "or other splits' cache keys)")
+    ap.add_argument("--temperature", type=float, default=None,
+                     help="override config.yaml's llm.temperature for this run only (e.g. >0 for "
+                          "multi-round sampling -- see scripts/extract_multiround.py)")
+    ap.add_argument("--cache-salt", default=None,
+                     help="mixed into the LLM cache key only, never sent to the model -- lets "
+                          "repeated calls with identical (prompt, temperature, max_tokens) force "
+                          "independent network calls instead of replaying one cache entry "
+                          "(multi-round sampling)")
     args = ap.parse_args()
 
     wd = work_dir(args.dataset, args.split)
-    template = open(f"prompts/{args.dataset}_prompt_template.txt", encoding="utf-8").read()
+    prompt_path = args.prompt or f"prompts/{args.dataset}_prompt_template.txt"
+    template = open(prompt_path, encoding="utf-8").read()
     docs = list(read_jsonl(wd / "docs.jsonl"))
     if args.limit:
         docs = docs[: args.limit]
+    print(f"using prompt template: {prompt_path}")
 
     client = LLMClient(wd / "llm_cache")
 
     def process(doc):
         prompt = template.replace("{TEXT}", doc["text"])
-        record, parsed, status, err = extract_one(client, prompt)
+        record, parsed, status, err = extract_one(
+            client, prompt, max_tokens=args.max_tokens,
+            temperature=args.temperature, cache_salt=args.cache_salt,
+        )
         return {
             "doc_id": doc["doc_id"],
             "chunk_id": None,

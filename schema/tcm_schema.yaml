@@ -8,6 +8,8 @@ entity_types:
   prompt_line: 患者可感或医生可察的单一临床表现，含舌象、脉象。例：恶寒、口苦、苔白腻、脉浮紧。
 - name: 治法功效
   prompt_line: 治疗原则或方药作用。证候后的"治法"与方药后的"功效"共用此类型，由关系名区分角色。例：辛温解表、健脾化湿、宣肺平喘。
+- name: 病因
+  prompt_line: 致病因素，回答"是什么让他生病的"。切到最小可复用单位："寒邪犯胃"→寒邪，"体虚久病"→体虚、久病。例：寒邪、饮食不节、情志失调。
 - name: 方剂
   prompt_line: 例：麻黄汤、参苓白术散。
 - name: 中药
@@ -19,34 +21,73 @@ entity_types:
 relations:
 - name: 分型
   kind: relational
-  domain: [疾病]
+  domain: [疾病, 证候]
   range: [证候]
-  description: 疾病分型为证候
+  description: 疾病或证候（诊断学按病性/病位辨证时，大类证候常再分小类）分型为证候
   cues: 辨证论治下的分型标题
 - name: 表现为
   kind: relational
-  domain: [证候]
+  domain: [疾病, 证候, 病因, 脏腑经络, 症状]
   range: [症状]
-  description: 证候表现为症状
+  description: 疾病、证候、病因、脏腑（藏象学说的脏腑功能失常表现）或症状（诊断学常见的
+    "总症状表现为具体细分症状"分类写法，如"神乱表现为焦虑恐惧、淡漠痴呆"）表现为症状
   cues: "\"症状：\"\"临床表现：\"\"症见\""
+- name: 主症
+  kind: relational
+  domain: [疾病, 症状]
+  range: [症状]
+  description: 疾病或症状（诊断学症状分类的总-分写法）的主要症状
+  cues: "\"以……为主症\"\"主要表现为\""
+- name: 兼症
+  kind: relational
+  domain: [疾病, 症状]
+  range: [症状]
+  description: 疾病或症状（诊断学症状分类的总-分写法）的兼见症状
+  cues: "\"常伴有\"\"可伴\"\"或见\""
 - name: 治法
   kind: relational
-  domain: [证候]
+  domain: [疾病, 证候]
   range: [治法功效]
-  description: 证候的治法
-  cues: "\"治法：\"\"治宜\"\"当以……法\""
+  description: 疾病或证候的治法
+  cues: "\"治法：\"\"治宜\"\"治当……为主\""
 - name: 方用
   kind: relational
   domain: [证候]
   range: [方剂]
   description: 证候所用方剂
   cues: "\"方药：\"\"代表方：\"\"某方主之\""
-- name: 病位
+- name: 用药
   kind: relational
   domain: [证候]
+  range: [中药]
+  description: 证候的常用药（非方剂配伍）
+  cues: "\"常用药：\""
+- name: 病位
+  kind: relational
+  domain: [疾病, 证候, 病因]
   range: [脏腑经络]
-  description: 证候的病位
+  description: 疾病、证候或病因（致病因素的常见侵袭/内伤部位）的病位
   cues: "\"病位在\"\"病在\"\"病位主要在\""
+- name: 病因
+  kind: relational
+  domain: [疾病, 证候, 病因]
+  range: [病因, 症状]
+  description: 疾病、证候或另一病因的病因（基础理论的病因病机章常见多层致病因素链，如情志失调→
+    气机郁滞）；范围也含症状，因为病因病机章常直接描述某病因的致病表现而不单独立"表现为"
+  cues: "\"多由……\"\"每因……\"\"诱发因素\"\"病史\""
+- name: 鉴别
+  kind: relational
+  domain: [疾病, 证候, 症状]
+  range: [疾病, 证候, 症状]
+  description: 疾病、证候或症状间的鉴别诊断（对称关系，只输出一条）
+  cues: "\"……与……鉴别\"\"三者同属\""
+- name: 别名
+  kind: relational
+  domain: [疾病, 证候, 症状, 治法功效, 脏腑经络, 病因]
+  range: [疾病, 证候, 症状, 治法功效, 脏腑经络, 病因]
+  description: 同类概念间的别称（对称关系，只输出一条）；不止疾病，基础理论/诊断学里证候、
+    治法、脏腑等术语也常有古今异名
+  cues: "\"又称\"\"俗称\"\"古称\"\"某某称之为\""
 - name: 组成
   kind: relational
   domain: [方剂]
@@ -60,10 +101,10 @@ relations:
   description: 方剂或中药的功效
   cues: "\"功效：\"\"功能：\"\"本方……\"\"某药……以……\""
 - name: 性味
-  kind: relational
+  kind: intrinsic
   domain: [中药]
   range: [性味]
-  description: 中药的性味
+  description: 中药的性味（挂成中药节点 attributes 里的字符串，性味本身不作为图节点）
   cues: "\"性味：\"\"味辛，性温\""
 - name: 归经
   kind: relational
@@ -77,3 +118,35 @@ relations:
   range: [症状, 疾病, 证候]
   description: 中药主治
   cues: "\"主治：\"\"治……\"\"用于……\""
+- name: 加药
+  kind: relational
+  domain: [证候]
+  range: [中药]
+  description: 随证加减时在证候常规用药基础上加用的中药（v4 起为图中一等关系，必须携带
+    condition 说明加药的触发条件，见 stage2_validate 校验规则）
+  cues: "\"若……者，加……\""
+- name: 减药
+  kind: relational
+  domain: [证候]
+  range: [中药]
+  description: 随证加减时从证候常规用药中去掉的中药（必须携带 condition）
+  cues: "\"……者，去……\""
+- name: 加方
+  kind: relational
+  domain: [证候]
+  range: [方剂]
+  description: 随证加减时在证候常规方剂基础上合用的方剂（必须携带 condition）
+  cues: "\"加用某方\"\"合某方\""
+- name: 换方
+  kind: relational
+  domain: [证候]
+  range: [方剂]
+  description: 随证加减时替换证候常规方剂的方剂（必须携带 condition）
+  cues: "\"改用某方\"\"用某方加减\""
+- name: 变证
+  kind: relational
+  domain: [证候]
+  range: [证候]
+  description: 随证加减的条件本身构成一个可独立成立的子证候（能通过补"证"测试且后接
+    方剂）时，母证候到子证候的转归关系
+  cues: 加减条件是证候名且后接方剂

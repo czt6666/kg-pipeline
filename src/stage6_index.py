@@ -20,11 +20,12 @@ from metrics_gscore import linearize
 def node_descriptions(wd: Path):
     nodes = list(read_jsonl(wd / "nodes.jsonl"))
     edges = list(read_jsonl(wd / "edges.jsonl"))
+    name_by_id = {n["entity_id"]: n["name"] for n in nodes}
 
     triples_by_entity = {}
     for e in edges:
-        head_name = next((n["name"] for n in nodes if n["entity_id"] == e["head"]), None)
-        tail_name = next((n["name"] for n in nodes if n["entity_id"] == e["tail"]), None)
+        head_name = name_by_id.get(e["head"])
+        tail_name = name_by_id.get(e["tail"])
         if head_name and tail_name:
             triples_by_entity.setdefault(e["head"], []).append(
                 {"head": head_name, "relation": e["relation"], "tail": tail_name}

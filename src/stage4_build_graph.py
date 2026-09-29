@@ -42,6 +42,13 @@ def main():
     nodes = {}  # entity_id -> {entity_id, doc_id, name, type, aliases:set, attributes:defaultdict(list), mention_ids:list}
     edges = []
     seen_edge_keys = set()
+    # entities folded into another node's attributes via an intrinsic triple, and never
+    # otherwise a relational head/tail anywhere in the split -- these get no edges and
+    # would show up as always-isolated nodes purely because their info moved to an
+    # attribute string, so they're dropped from node_rows at the end (DESIGN.md /
+    # CLAUDE.md "kind: intrinsic 挂成头实体 attributes 里的字符串，性味本身不作为图节点").
+    intrinsic_tail_entities = set()
+    relational_participant_entities = set()
 
     for doc_id, doc in valid_docs.items():
         entity_by_local = {e["local_id"]: e for e in doc["entities"]}
@@ -81,8 +88,15 @@ def main():
                 tail_name = nodes.get(tail_entity, {}).get("name") or entity_by_local.get(t["tail"], {}).get("name")
                 if tail_name and tail_name not in nodes[head_entity]["attributes"][t["relation"]]:
                     nodes[head_entity]["attributes"][t["relation"]].append(tail_name)
+                intrinsic_tail_entities.add(tail_entity)
             else:
-                key = (doc_id, head_entity, t["relation"], tail_entity)
+                relational_participant_entities.add(head_entity)
+                relational_participant_entities.add(tail_entity)
+                # condition is part of the identity for 加药/减药/加方/换方/变证: the same
+                # (head, relation, tail) can legitimately recur under different 随证加减
+                # trigger conditions in one doc (e.g. two different symptom clauses both
+                # add the same herb), and collapsing those would silently drop a condition.
+                key = (doc_id, head_entity, t["relation"], tail_entity, t.get("condition"))
                 if key in seen_edge_keys:
                     continue
                 seen_edge_keys.add(key)
@@ -94,6 +108,7 @@ def main():
                         "relation": t["relation"],
                         "pid": t["pid"],
                         "tail": tail_entity,
+                        "condition": t.get("condition"),
                         "provenance": {
                             "head_mention_ids": local_to_mentions[doc_id].get(t["head"], []),
                             "tail_mention_ids": local_to_mentions[doc_id].get(t["tail"], []),
@@ -101,8 +116,12 @@ def main():
                     }
                 )
 
+    folded_only = intrinsic_tail_entities - relational_participant_entities
+
     node_rows = []
     for n in nodes.values():
+        if n["entity_id"] in folded_only:
+            continue
         node_rows.append(
             {
                 "entity_id": n["entity_id"],
@@ -128,7 +147,13 @@ def main():
             attributes=str(n["attributes"]),
         )
     for e in edges:
-        g.add_edge(e["head"], e["tail"], relation=e["relation"], pid=e["pid"] or "", edge_id=e["edge_id"])
+        condition = e.get("condition")
+        # condition is a plain string as of v4_pro; older v4 splits stored {"raw": ...}.
+        condition_raw = (condition.get("raw") if isinstance(condition, dict) else condition) or ""
+        g.add_edge(
+            e["head"], e["tail"], relation=e["relation"], pid=e["pid"] or "",
+            edge_id=e["edge_id"], condition=condition_raw,
+        )
     nx.write_graphml(g, wd / "graph.graphml")
 
     print(f"nodes: {len(node_rows)}, edges: {len(edges)}")

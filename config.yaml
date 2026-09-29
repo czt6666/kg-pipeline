@@ -24,6 +24,12 @@ retrieval:
   bfs_node_budget: 500
   top_k: 10
 
+preprocess:
+  workers: 8
+  max_retries: 3
+  retry_base_delay_s: 1.0
+  max_output_tokens: 2048
+
 datasets:
   docred:
     schema_path: schema/docred_schema.yaml
