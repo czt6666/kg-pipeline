@@ -1,7 +1,7 @@
-"""Cached LLM client for the SHEEPWALL gateway and OpenAI question answering.
+"""Cached LLM client for the SHEEPWALL gateway (the only LLM provider in this repo).
 
-Gateway chat uses the Anthropic-style /v1/messages endpoint with extended thinking
-disabled; OpenAI chat uses /v1/chat/completions. Both providers support embeddings.
+Chat uses the Anthropic-style /v1/messages endpoint with extended thinking disabled;
+embeddings use /v1/embeddings.
 
 deepseek-v4-pro on this gateway has a hard 8192-token *total* output cap (thinking +
 content share the same budget) via the OpenAI-compatible /v1/chat/completions endpoint,
@@ -12,8 +12,7 @@ so max_tokens covers only the JSON answer -- verified empirically (see session n
 finish in single-digit seconds with well-formed output. Gateway chat therefore uses
 /v1/messages.
 
-Gateway cache key = sha256(model + prompt + temperature + max_tokens); OpenAI keys also
-include the provider. A hit skips the network
+Cache key = sha256(model + prompt + temperature + max_tokens). A hit skips the network
 call entirely (DESIGN.md 2.5). Retries only apply to the network/HTTP layer, not to
 content-level parse failures (those are handled one level up, in stage 2 validation).
 """
@@ -37,23 +36,12 @@ class LLMError(RuntimeError):
 
 
 class LLMClient:
-    def __init__(self, cache_dir: Path, model: str = None, provider: str = "gateway"):
-        config = load_config()
-        cfg = config["llm"]
-        if provider == "openai":
-            qa_cfg = config["qa"]
-            self.base_url = qa_cfg["base_url"].rstrip("/") + "/"
-            self.api_key = os.environ[qa_cfg["api_key_env"]]
-            self.model = model or qa_cfg["model"]
-            self.embedding_model = qa_cfg["embedding_model"]
-        elif provider == "gateway":
-            self.base_url = os.environ[cfg["base_url_env"]].rstrip("/") + "/"
-            self.api_key = os.environ[cfg["api_key_env"]]
-            self.model = model or os.environ[cfg["model_env"]]
-            self.embedding_model = os.environ[cfg["embedding_model_env"]]
-        else:
-            raise ValueError(f"unknown LLM provider: {provider}")
-        self.provider = provider
+    def __init__(self, cache_dir: Path, model: str = None):
+        cfg = load_config()["llm"]
+        self.base_url = os.environ[cfg["base_url_env"]].rstrip("/") + "/"
+        self.api_key = os.environ[cfg["api_key_env"]]
+        self.model = model or os.environ[cfg["model_env"]]
+        self.embedding_model = os.environ[cfg["embedding_model_env"]]
         self.temperature = cfg["temperature"]
         self.max_output_tokens = cfg["max_output_tokens"]
         self.max_retries = cfg["max_retries"]
@@ -75,8 +63,6 @@ class LLMClient:
 
     def _cache_key(self, prompt: str, temperature: float, max_tokens: int, cache_salt: str = None) -> str:
         raw = f"{self.model}|{prompt}|{temperature}|{max_tokens}"
-        if self.provider == "openai":
-            raw = "openai|" + raw
         if cache_salt is not None:
             # Appended only when the caller opts in (e.g. multi-round sampling needs N
             # independent calls against an otherwise-identical (model, prompt,
@@ -119,8 +105,7 @@ class LLMClient:
              cache_salt: str = None) -> dict:
         """Returns the cache record dict (see llm_cache/{sha256}.json schema in DESIGN.md 6).
 
-        OpenAI calls use Chat Completions; gateway calls use /v1/messages with
-        thinking disabled (see module docstring).
+        Calls /v1/messages with thinking disabled (see module docstring).
 
         cache_salt is mixed into the cache key only -- never sent to the model -- so
         multi-round sampling (same prompt/temperature/max_tokens, called N times to get
@@ -136,29 +121,18 @@ class LLMClient:
 
         payload = {"model": self.model,
                    "messages": [{"role": "user", "content": prompt}],
-                   "temperature": temperature}
-        if self.provider == "openai":
-            payload["max_completion_tokens"] = max_tokens
-            url = self.base_url + "v1/chat/completions"
-            headers = self._headers()
-        else:
-            payload["max_tokens"] = max_tokens
-            payload["thinking"] = {"type": "disabled"}
-            url = self.base_url + "v1/messages"
-            headers = self._messages_headers()
+                   "temperature": temperature,
+                   "max_tokens": max_tokens,
+                   "thinking": {"type": "disabled"}}
         t0 = time.time()
-        resp = self._post_with_retry(url, payload, headers=headers)
+        resp = self._post_with_retry(self.base_url + "v1/messages", payload,
+                                     headers=self._messages_headers())
         latency_ms = int((time.time() - t0) * 1000)
         data = resp.json()
-        if self.provider == "openai":
-            choice = data["choices"][0]
-            response_text = choice["message"].get("content") or ""
-            thinking = None
-            finish_reason = choice.get("finish_reason")
-        else:
-            response_text = "".join(b.get("text", "") for b in data.get("content", []) if b.get("type") == "text")
-            thinking = "".join(b.get("thinking", "") for b in data.get("content", []) if b.get("type") == "thinking")
-            finish_reason = data.get("stop_reason")
+        blocks = data.get("content", [])
+        response_text = "".join(b.get("text", "") for b in blocks if b.get("type") == "text")
+        thinking = "".join(b.get("thinking", "") for b in blocks if b.get("type") == "thinking")
+        finish_reason = data.get("stop_reason")
         record = {
             "cache_key": key,
             "model": self.model,

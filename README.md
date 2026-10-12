@@ -91,8 +91,8 @@ resources/prompts/
 
 ### 3) 启动服务
 
-问答 Agent 使用 OpenAI `gpt-4.1`。启动图谱服务前，在仓库根目录的 `.env` 中设置
-`OPENAI_API_KEY`；问答中的向量检索使用 OpenAI `text-embedding-3-small`。
+所有 LLM 调用（抽取、检索总结、问答 Agent、向量检索）都走 SHEEPWALL 网关。启动服务前，在仓库根目录的
+`.env` 中设置 `SHEEPWALL_BASE_URL`、`SHEEPWALL_API_KEY`、`SHEEPWALL_MODEL`、`SHEEPWALL_EMBEDDING_MODEL`。
 
 ```bash
 # 后端服务：页面 + pipeline API

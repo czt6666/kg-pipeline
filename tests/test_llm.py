@@ -1,10 +1,21 @@
-"""Verify the QA provider's wire format and cache without network access."""
+"""Verify the SHEEPWALL gateway wire format and cache without network access."""
+
+import pytest
 
 from core.llm import LLMClient
 
+BASE = "https://gateway.test/llm/"
 
-def test_openai_chat_completion_and_cache(monkeypatch, tmp_path):
-    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+
+@pytest.fixture
+def gateway_env(monkeypatch):
+    monkeypatch.setenv("SHEEPWALL_BASE_URL", BASE)
+    monkeypatch.setenv("SHEEPWALL_API_KEY", "test-key")
+    monkeypatch.setenv("SHEEPWALL_MODEL", "deepseek-v4-pro")
+    monkeypatch.setenv("SHEEPWALL_EMBEDDING_MODEL", "azure/text-embedding-3-small")
+
+
+def test_chat_uses_messages_endpoint_without_thinking_and_caches(gateway_env, monkeypatch, tmp_path):
     calls = []
 
     class Response:
@@ -12,8 +23,9 @@ def test_openai_chat_completion_and_cache(monkeypatch, tmp_path):
 
         def json(self):
             return {
-                "choices": [{"message": {"content": "您好"}, "finish_reason": "stop"}],
-                "usage": {"prompt_tokens": 5, "completion_tokens": 2},
+                "content": [{"type": "text", "text": "您好"}],
+                "stop_reason": "end_turn",
+                "usage": {"input_tokens": 5, "output_tokens": 2},
             }
 
     def fake_post(url, headers, json, timeout):
@@ -21,34 +33,33 @@ def test_openai_chat_completion_and_cache(monkeypatch, tmp_path):
         return Response()
 
     monkeypatch.setattr("core.llm.requests.post", fake_post)
-    client = LLMClient(tmp_path, provider="openai")
+    client = LLMClient(tmp_path)
     result = client.chat("你好", temperature=0, max_tokens=32)
 
     assert calls == [(
-        "https://api.openai.com/v1/chat/completions",
-        {"Authorization": "Bearer test-key", "Content-Type": "application/json"},
-        {"model": "gpt-4.1", "messages": [{"role": "user", "content": "你好"}],
-         "temperature": 0, "max_completion_tokens": 32},
+        BASE + "v1/messages",
+        {"x-api-key": "test-key", "anthropic-version": "2023-06-01",
+         "Content-Type": "application/json"},
+        {"model": "deepseek-v4-pro", "messages": [{"role": "user", "content": "你好"}],
+         "temperature": 0, "max_tokens": 32, "thinking": {"type": "disabled"}},
     )]
     assert result["response_raw"] == "您好"
-    assert result["finish_reason"] == "stop"
+    assert result["finish_reason"] == "end_turn"
     assert client.chat("你好", temperature=0, max_tokens=32) == result
     assert len(calls) == 1
 
 
-def test_agent_build_uses_openai_for_decisions_and_answers(monkeypatch):
-    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+def test_agent_build_uses_gateway_for_decisions_answers_and_retrieval(gateway_env):
     from assistant.loop import TCMAgent
 
     agent, _ = TCMAgent.build()
-    assert agent.reasoner.client.provider == "openai"
-    assert agent.reasoner.client.model == "gpt-4.1"
+    assert agent.reasoner.client.base_url == BASE
+    assert agent.reasoner.client.model == "deepseek-v4-pro"
     assert agent.reasoner.answer_client is agent.reasoner.client
-    assert agent.adapter.embedding_provider == "openai"
+    assert not hasattr(agent.adapter, "embedding_provider")
 
 
-def test_openai_embeddings_use_same_key_and_order_results(monkeypatch, tmp_path):
-    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+def test_embeddings_use_bearer_auth_and_order_results(gateway_env, monkeypatch, tmp_path):
     calls = []
 
     class Response:
@@ -65,10 +76,10 @@ def test_openai_embeddings_use_same_key_and_order_results(monkeypatch, tmp_path)
         return Response()
 
     monkeypatch.setattr("core.llm.requests.post", fake_post)
-    client = LLMClient(tmp_path, provider="openai")
+    client = LLMClient(tmp_path)
     assert client.embed(["柴胡", "桂枝"]) == [[1.0, 0.0], [0.0, 1.0]]
     assert calls == [(
-        "https://api.openai.com/v1/embeddings",
+        BASE + "v1/embeddings",
         {"Authorization": "Bearer test-key", "Content-Type": "application/json"},
-        {"model": "text-embedding-3-small", "input": ["柴胡", "桂枝"]},
+        {"model": "azure/text-embedding-3-small", "input": ["柴胡", "桂枝"]},
     )]

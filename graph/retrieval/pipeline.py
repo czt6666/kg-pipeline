@@ -124,7 +124,7 @@ def generate_summary(wd: Path, entity_id: str, top_k: int = 10) -> str | None:
 
 
 def hybrid_search(dataset: str, merge: str, term: str, top_k: int = 10, expand: bool = True,
-                  embedding_provider: str = "gateway", **weights):
+                  **weights):
     """Full pipeline for one term. Returns:
     {"term", "candidates": [...], "resolved": {...} | None} where `resolved` is
     `expand_entity`'s output for the top-ranked candidate (summary always None -- fetch it
@@ -137,7 +137,7 @@ def hybrid_search(dataset: str, merge: str, term: str, top_k: int = 10, expand: 
     search box) that only need the candidate list, not a full explanation.
     """
     wd = graph_dir(dataset, merge)
-    client = LLMClient(wd / "llm_cache", provider=embedding_provider)
+    client = LLMClient(wd / "llm_cache")
     candidates = resolve_candidates(wd, term, client, top_k=top_k, **weights)
 
     resolved = None

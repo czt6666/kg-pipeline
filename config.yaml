@@ -10,12 +10,6 @@ llm:
   retry_max_delay_s: 30.0
   request_timeout_s: 120
 
-qa:
-  base_url: https://api.openai.com/
-  api_key_env: OPENAI_API_KEY
-  model: gpt-4.1
-  embedding_model: text-embedding-3-small
-
 extraction:
   max_input_tokens: 3500
   chunk_overlap: 0.1

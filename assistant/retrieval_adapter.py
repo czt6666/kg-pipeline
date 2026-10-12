@@ -16,13 +16,11 @@ from .schema_spec import SchemaSpec
 
 
 class RetrievalAdapter:
-    def __init__(self, dataset: str, merge: str, schema: SchemaSpec, top_k: int = 10,
-                 embedding_provider: str = "gateway"):
+    def __init__(self, dataset: str, merge: str, schema: SchemaSpec, top_k: int = 10):
         self.dataset = dataset
         self.merge = merge
         self.schema = schema
         self.top_k = top_k
-        self.embedding_provider = embedding_provider
 
     def validate(self, request: RetrievalRequest) -> list[str]:
         """Returns a list of human-readable errors (empty == valid). The loop shows these
@@ -59,8 +57,7 @@ class RetrievalAdapter:
         out = []
         for q in request.queries:
             result = hybrid_search(self.dataset, self.merge, q.term,
-                                   top_k=request.top_k or self.top_k, expand=True,
-                                   embedding_provider=self.embedding_provider)
+                                   top_k=request.top_k or self.top_k, expand=True)
             out.append(self._to_evidence(q, result))
         return out
 

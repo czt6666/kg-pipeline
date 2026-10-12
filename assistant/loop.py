@@ -81,11 +81,10 @@ class TCMAgent:
             state.merge = merge
         schema = load_schema_spec(state.dataset)
         wd = graph_dir(state.dataset, state.merge)
-        client = LLMClient(wd / "llm_cache", provider="openai")
+        client = LLMClient(wd / "llm_cache")
         from .reasoner import LLMReasoner
         reasoner = LLMReasoner(client)
-        adapter = RetrievalAdapter(state.dataset, state.merge, schema,
-                                   embedding_provider="openai")
+        adapter = RetrievalAdapter(state.dataset, state.merge, schema)
         return cls(reasoner, adapter, schema), state
 
     # ---- the loop ----
