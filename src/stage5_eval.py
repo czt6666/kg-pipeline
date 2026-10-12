@@ -6,8 +6,8 @@ import json
 from collections import defaultdict
 from pathlib import Path
 
-from common import REPO_ROOT, read_jsonl, work_dir, write_jsonl
-from llm_client import LLMClient
+from core.common import REPO_ROOT, read_jsonl, work_dir, write_jsonl
+from core.llm import LLMClient
 from metrics_gscore import compute_bertscore, compute_bleu_rouge
 from metrics_genres import (
     _embed_all_triples,
@@ -17,6 +17,7 @@ from metrics_genres import (
     compute_topical_similarity,
     compute_uniqueness,
 )
+from prompting import PromptStore
 
 
 def build_triples_eval(wd: Path):
@@ -120,12 +121,13 @@ def main():
         print(f"  CS: {cs}")
 
         print("computing FS (factualness, LLM judge)...")
-        fact_prompt = (REPO_ROOT / "prompts/genres_fact_checker.txt").read_text()
+        prompt_asset = PromptStore().evaluation_genres()
+        fact_prompt = prompt_asset.read_text("fact_checker")
         fs = compute_factualness(client, pred_triples_by_doc, doc_texts, fact_prompt)
         print(f"  FS: {fs}")
 
         print("computing GS (granularity, LLM judge)...")
-        gran_prompt = (REPO_ROOT / "prompts/genres_granularity_checker.txt").read_text()
+        gran_prompt = prompt_asset.read_text("granularity_checker")
         gs = compute_granularity(client, pred_triples_by_doc, gran_prompt)
         print(f"  GS: {gs}")
 

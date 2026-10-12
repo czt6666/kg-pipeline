@@ -22,22 +22,23 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
-from common import read_jsonl, work_dir, write_jsonl  # noqa: E402
-from llm_client import LLMClient  # noqa: E402
+from core.common import read_jsonl, work_dir, write_jsonl
+from core.llm import LLMClient
 from stage1_extract import try_parse  # noqa: E402
+from prompting import PromptStore  # noqa: E402
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--dataset", default="TCM")
     ap.add_argument("--split", required=True)
-    ap.add_argument("--prompt", default="prompts/tcm_prompt_template_v2_pro.txt")
+    ap.add_argument("--prompt", default=None, help="optional prompt template override path")
     ap.add_argument("--max-tokens", type=int, default=8192)
     ap.add_argument("--workers", type=int, default=12)
     args = ap.parse_args()
 
     wd = work_dir(args.dataset, args.split)
-    template = open(ROOT / args.prompt, encoding="utf-8").read()
+    template = Path(args.prompt).read_text(encoding="utf-8") if args.prompt else PromptStore().resolve("extraction/tcm").read_text("template")
     docs_by_id = {d["doc_id"]: d for d in read_jsonl(wd / "docs.jsonl")}
     raw_rows = list(read_jsonl(wd / "extraction_raw.jsonl"))
 

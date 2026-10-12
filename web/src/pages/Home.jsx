@@ -28,7 +28,7 @@ const STAGES = [
 
 export function Home() {
   const [merged, setMerged] = useState([]);
-  useEffect(() => { getJSON("/api/merged").then(setMerged); }, []);
+  useEffect(() => { getJSON("/api/kg/merged").then(setMerged); }, []);
   const totals = merged.reduce((a, m) => ({
     nodes: a.nodes + (m.n_nodes||0), edges: a.edges + (m.n_edges||0), docs: a.docs + (m.n_docs||0),
   }), { nodes:0, edges:0, docs:0 });

@@ -12,7 +12,7 @@ from collections import defaultdict
 
 import yaml
 
-from common import read_jsonl, work_dir, write_jsonl
+from core.common import read_jsonl, schema_path, work_dir, write_jsonl
 
 LITERAL_TYPES = {"TIME", "NUM"}
 
@@ -304,7 +304,7 @@ def main():
     args = ap.parse_args()
 
     wd = work_dir(args.dataset, args.split)
-    entity_types, rel_by_norm_name = load_schema(f"schema/{args.dataset}_schema.yaml")
+    entity_types, rel_by_norm_name = load_schema(str(schema_path(args.dataset)))
     docs_by_id = {d["doc_id"]: d for d in read_jsonl(wd / "docs.jsonl")}
 
     valid_rows, warnings_rows, mentions_rows, modifiers_rows = [], [], [], []

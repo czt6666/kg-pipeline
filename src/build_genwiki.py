@@ -17,8 +17,8 @@ import re
 from collections import Counter, defaultdict
 from pathlib import Path
 
-from common import REPO_ROOT, read_jsonl, write_jsonl
-from prompt_builder import PromptBuilder
+from core.common import REPO_ROOT, schema_path, work_dir, write_jsonl
+from prompting.builder import PromptBuilder
 
 # (property, kind, description) — kind: intrinsic = stored as node attribute, relational = edge.
 # Descriptions are concise glosses for the LLM prompt.
@@ -149,7 +149,7 @@ def build_schema():
                      "description": _camel_split(n)})
     schema = {"dataset": "genwiki", "entity_types": ENTITY_TYPES, "relations": rels}
     import yaml
-    out = REPO_ROOT / "schema/genwiki_schema.yaml"
+    out = REPO_ROOT / "resources/schemas/genwiki.yaml"
     out.parent.mkdir(exist_ok=True)
     yaml.safe_dump(schema, open(out, "w", encoding="utf-8"), allow_unicode=True, sort_keys=False)
     print(f"wrote {out} ({len(rels)} relations; {len(extra_names)} auto-added from test set)")
@@ -169,12 +169,13 @@ def build_docs_gold(split: str, limit: int | None = None):
         gold.append({"doc_id": doc_id, "triples": [
             {"head": h, "relation": r, "tail": t} for h, r, t in ex["graph"]
         ]})
-    write_jsonl(REPO_ROOT / f"data/work/genwiki/{split}/docs.jsonl", docs)
-    write_jsonl(REPO_ROOT / f"data/work/genwiki/{split}/gold.jsonl", gold)
-    print(f"wrote {len(docs)} docs + {len(gold)} gold rows to data/work/genwiki/{split}/")
+    wd = work_dir("genwiki", split)
+    write_jsonl(wd / "docs.jsonl", docs)
+    write_jsonl(wd / "gold.jsonl", gold)
+    print(f"wrote {len(docs)} docs + {len(gold)} gold rows to {wd}/")
 
 
-def build_fewshot():
+def build_fewshot(version: str = "v1"):
     """Pick 3 diverse short train examples whose graph uses only in-schema relations."""
     schema_rels = {r for r, _, _ in RELATIONS}
     data = json.load(open(RAW / "train/fine/part_1.json"))
@@ -219,8 +220,9 @@ def build_fewshot():
             entities.append({"id": eid[name], "name": name, "type": guess_type(name, roles[name], rels_by_ent[name]), "mentions": [name]})
         triples = [{"head": eid[h], "relation": r, "tail": eid[t]} for h, r, t in ex["graph"]]
         out.append({"text": fill_text(ex), "output": {"entities": entities, "triples": triples}})
-    write_jsonl(REPO_ROOT / "prompts/genwiki_fewshot.json", out)
-    print(f"wrote prompts/genwiki_fewshot.json ({len(out)} examples)")
+    out_path = REPO_ROOT / f"resources/prompts/genwiki/{version}/fewshot.json"
+    write_jsonl(out_path, out)
+    print(f"wrote {out_path} ({len(out)} examples)")
     return out
 
 
@@ -229,9 +231,9 @@ class GenWikiPromptBuilder(PromptBuilder):
     (see prompt_builder.PromptBuilder); only render() differs, grouping relations by
     kind (relational vs intrinsic) rather than by domain (DocRED) or a markdown table
     (TCM)."""
-    schema_path = REPO_ROOT / "schema/genwiki_schema.yaml"
-    fewshot_path = REPO_ROOT / "prompts/genwiki_fewshot.json"
-    out_path = REPO_ROOT / "prompts/genwiki_prompt_template.txt"
+    schema_path = REPO_ROOT / "resources/schemas/genwiki.yaml"
+    fewshot_path = REPO_ROOT / "resources/prompts/genwiki/v1/fewshot.json"
+    out_path = REPO_ROOT / "resources/prompts/genwiki/v1/template.txt"
 
     def load_fewshot(self):
         # genwiki_fewshot.json is written via write_jsonl (see build_fewshot() above),
@@ -278,11 +280,15 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--split", default="test")
     ap.add_argument("--limit", type=int, default=None)
+    ap.add_argument("--version", default="v1")
     args = ap.parse_args()
     build_schema()
     build_docs_gold(args.split, args.limit)
-    build_fewshot()
-    GenWikiPromptBuilder().build()
+    build_fewshot(args.version)
+    GenWikiPromptBuilder(
+        fewshot_path=REPO_ROOT / f"resources/prompts/genwiki/{args.version}/fewshot.json",
+        out_path=REPO_ROOT / f"resources/prompts/genwiki/{args.version}/template.txt",
+    ).build()
 
 
 if __name__ == "__main__":

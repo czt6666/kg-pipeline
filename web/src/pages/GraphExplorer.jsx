@@ -40,7 +40,7 @@ export function GraphExplorer() {
   const [focusStack, setFocusStack] = useState([]);
 
   useEffect(() => {
-    getJSON("/api/merged").then(list => {
+    getJSON("/api/kg/merged").then(list => {
       setMergedList(list);
       if (list.length) setSelectedKey(mergeKey(list[0]));
     });
@@ -49,7 +49,7 @@ export function GraphExplorer() {
   const selected = useMemo(() => mergedList.find(m => mergeKey(m) === selectedKey) || null, [mergedList, selectedKey]);
   const dataset = selected?.dataset ?? null;
   const merge = selected?.merge || "merged";
-  const basePath = dataset ? `/api/merged/${dataset}/${merge}` : null;
+  const basePath = dataset ? `/api/kg/merged/${dataset}/${merge}` : null;
 
   useEffect(() => {
     if (!basePath) return;
@@ -140,7 +140,7 @@ export function GraphExplorer() {
   const runSearch = () => {
     if (!searchTerm.trim() || !dataset) return;
     setSearching(true);
-    getJSON(`/api/retrieval/search?dataset=${dataset}&merge=${merge}&term=${encodeURIComponent(searchTerm.trim())}&top_k=10&expand=0`)
+    getJSON(`/api/kg/retrieval/search?dataset=${dataset}&merge=${merge}&term=${encodeURIComponent(searchTerm.trim())}&top_k=10&expand=0`)
       .then(r => { setSearchResults(r.candidates); setSearching(false); })
       .catch(() => setSearching(false));
   };

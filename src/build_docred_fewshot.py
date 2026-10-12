@@ -1,4 +1,4 @@
-"""Stage 0: build prompts/docred_fewshot.json (3 hand-curated examples per DESIGN.md 2.4).
+"""Stage 0: build the DocRED few-shot file (3 hand-curated examples per DESIGN.md 2.4).
 
 Source documents are real DocRED train_annotated entries, selected because their gold
 labels naturally cover the four required demonstration points:
@@ -18,7 +18,7 @@ import json
 from pathlib import Path
 
 RAW_DIR = Path("data/raw/docred")
-OUT_PATH = Path("prompts/docred_fewshot.json")
+OUT_PATH = Path("resources/prompts/docred/v1/fewshot.json")
 
 
 def doc_text(doc):

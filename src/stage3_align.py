@@ -12,7 +12,7 @@ import re
 import unicodedata
 from collections import defaultdict
 
-from common import read_jsonl, work_dir, write_jsonl
+from core.common import read_jsonl, work_dir, write_jsonl
 
 LEADING_ARTICLES = re.compile(r"^(a|an|the)\s+", re.IGNORECASE)
 

@@ -15,7 +15,7 @@ import json
 import re
 from pathlib import Path
 
-from common import REPO_ROOT, count_tokens, load_config, work_dir, write_jsonl
+from core.common import REPO_ROOT, count_tokens, load_config, work_dir, write_jsonl
 
 DEV_PATH = REPO_ROOT / "data/raw/docred/dev.json"
 GENRES_PATH = REPO_ROOT / "data/raw/genres_reference/docred_rand_200.json"

@@ -7,11 +7,11 @@ Usage:
 """
 import argparse
 
-from common import work_dir
-from llm_client import LLMClient
-from retrieval.lexical import lexical_search
-from retrieval.pipeline import expand_entity, resolve_candidates
-from retrieval.semantic import semantic_search
+from core.common import graph_dir
+from core.llm import LLMClient
+from graph.retrieval.lexical import lexical_search
+from graph.retrieval.pipeline import expand_entity, resolve_candidates
+from graph.retrieval.semantic import semantic_search
 
 
 def _print_hits(hits, extra_key=None):
@@ -26,14 +26,14 @@ def _print_hits(hits, extra_key=None):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--dataset", default="TCM")
-    ap.add_argument("--merge", default="merged_neike", help="data/work/{dataset}/{merge}")
+    ap.add_argument("--merge", default="merged_neike", help="data/graph/{dataset}/{merge}")
     ap.add_argument("--term", required=True)
     ap.add_argument("--top-k", type=int, default=10)
     ap.add_argument("--stage", choices=["lexical", "semantic", "fusion", "full"], default="full",
                      help="stop after this stage, for isolating where a bad result comes from")
     args = ap.parse_args()
 
-    wd = work_dir(args.dataset, args.merge)
+    wd = graph_dir(args.dataset, args.merge)
     client = LLMClient(wd / "llm_cache")
 
     print(f"=== lexical (top {args.top_k}) ===")

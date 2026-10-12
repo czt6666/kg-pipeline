@@ -15,7 +15,7 @@ Shares OCR-cleanup (load_pages/smart_join/strip_figure_blocks), the （一）（
 and the CLI driver with build_tcm.py via tcm_ocr.py, so both segmenters treat running headers,
 figure blocks, and page-break artifacts identically -- only the heading grammar differs.
 
-Output: data/work/TCM/{split}/{out}, one row per chunk:
+Output: data/pipeline/TCM/splits/{split}/{out}, one row per chunk:
   {doc_id, title, text, book, section, page_start, page_end}
 """
 from tcm_ocr import CHAPTER_STANDALONE_RE, CN_ENUM_RE, DISEASE_HEADER_RE, run_cli, split_paren_subheaders

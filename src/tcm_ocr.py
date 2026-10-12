@@ -17,7 +17,7 @@ import argparse
 import bisect
 import re
 
-from common import read_jsonl, work_dir, write_jsonl
+from core.common import read_jsonl, work_dir, write_jsonl
 
 RUNNING_HEADER_RE = re.compile(
     r"^\s*(\d{1,4}\s+\S{2,10}|第[一二三四五六七八九十百]+章\s+\S+\s+\d{1,4})\s*$"

@@ -1,7 +1,7 @@
 """Stage 7: cross-document merge into one complete KG per dataset.
 
 Merges every split that already has nodes.jsonl (docred -> eval200; genwiki -> test)
-into a single graph under data/work/{dataset}/merged/.
+into a single graph under data/graph/{dataset}/merged/.
 
 Cross-document alignment reuses the SAME normalized-name + type key as intra-document
 alignment (stage3_align.normalize_name): NFKC + whitespace collapse + article strip +
@@ -24,17 +24,17 @@ import argparse
 import json
 from collections import defaultdict
 
-from common import REPO_ROOT, read_jsonl, work_dir, write_jsonl
-from llm_client import LLMClient
+from core.common import REPO_ROOT, graph_dir, read_jsonl, work_dir, write_jsonl
+from core.llm import LLMClient
 from stage3_align import UnionFind, normalize_name
 from stage6_index import build_index, node_descriptions
 
 
 def collect_splits(dataset: str) -> list[str]:
-    """Splits under data/work/{dataset}/ with a finished nodes.jsonl AND full extraction
+    """Splits under data/pipeline/{dataset}/splits/ with a finished nodes.jsonl AND full extraction
     coverage (>=80% of docs have an extraction_valid record). This excludes half-baked
     splits like docred/dev (998 docs, only ~10 extracted)."""
-    base = REPO_ROOT / "data" / "work" / dataset
+    base = REPO_ROOT / "data" / "pipeline" / dataset / "splits"
     out = []
     if base.exists():
         for d in sorted(base.iterdir()):
@@ -56,7 +56,7 @@ def main():
                           "the same source docs, e.g. TCM's neike_trial/_v2/_v2_pro, which "
                           "collect_splits() can't tell apart from genuinely distinct splits)")
     ap.add_argument("--out", default="merged",
-                     help="output dir name under data/work/{dataset}/, default 'merged' -- "
+                     help="output graph dir name under data/graph/{dataset}/, default 'merged' -- "
                           "override when one dataset holds multiple independently-merged book/"
                           "corpus graphs (e.g. TCM's neike/jichu/zhenduan, each merged "
                           "separately via --splits neike --out merged_neike) rather than one "
@@ -69,7 +69,7 @@ def main():
         return
     print(f"[{args.dataset}] merging splits into {args.out}: {splits}")
 
-    wd = work_dir(args.dataset, args.out)
+    wd = graph_dir(args.dataset, args.out)
 
     all_nodes, all_edges = [], []
     docs_by_id = {}

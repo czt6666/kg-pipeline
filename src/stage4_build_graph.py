@@ -15,7 +15,7 @@ from collections import defaultdict
 
 import networkx as nx
 
-from common import read_jsonl, work_dir, write_jsonl
+from core.common import read_jsonl, work_dir, write_jsonl
 
 
 def main():

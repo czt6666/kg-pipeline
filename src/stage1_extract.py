@@ -1,18 +1,19 @@
 """Stage 1: run LLM extraction over docs.jsonl, cache responses, parse to extraction_raw.jsonl.
 
-Parse fallback order (DESIGN.md 2.5): json.loads -> json_repair -> one retry with the
-parse error appended to the prompt -> mark failed. The retry uses a different prompt
-string so it gets its own cache entry rather than looping on a cached failure.
+Parse fallback order: json.loads -> json_repair -> one retry with the parse error
+appended to the prompt -> mark failed.
 """
 import argparse
 import json
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from pathlib import Path
 
 import json_repair
 from tqdm import tqdm
 
-from common import read_jsonl, work_dir, write_jsonl
-from llm_client import LLMClient
+from core.common import read_jsonl, work_dir, write_jsonl
+from core.llm import LLMClient
+from prompting import PromptStore, write_prompt_lock
 
 
 def try_parse(raw_text: str):
@@ -33,13 +34,12 @@ def try_parse(raw_text: str):
 
 
 def extract_one(client: LLMClient, prompt: str, max_tokens: int = None, temperature: float = None,
-                 cache_salt: str = None):
+                cache_salt: str = None):
     record = client.chat(prompt, max_tokens=max_tokens, temperature=temperature, cache_salt=cache_salt)
     parsed, method, err = try_parse(record["response_raw"])
     if parsed is not None:
         return record, parsed, method, None
 
-    # retry once with parse error appended (new prompt -> new cache key)
     retry_prompt = (
         prompt
         + f"\n\n上一次的输出无法解析为 JSON（错误：{err}）。请只输出严格合法的 JSON，不要任何解释或代码围栏，重新生成。"
@@ -51,6 +51,14 @@ def extract_one(client: LLMClient, prompt: str, max_tokens: int = None, temperat
     return record2, None, "failed", err2 or err
 
 
+def _load_template(dataset: str, override: str | None):
+    if override:
+        path = Path(override)
+        return path.read_text(encoding="utf-8"), [{"key": "override", "version": "manual", "asset": "template", "path": str(path), "sha256": "manual"}], str(path)
+    asset = PromptStore().extraction(dataset)
+    return asset.read_text("template"), [asset.lock_record("template"), asset.lock_record("fewshot")], f"{asset.key}@{asset.version}"
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--dataset", default="docred")
@@ -58,27 +66,22 @@ def main():
     ap.add_argument("--limit", type=int, default=None)
     ap.add_argument("--workers", type=int, default=12, help="concurrent LLM requests")
     ap.add_argument("--prompt", default=None,
-                     help="override prompt template path (default: prompts/{dataset}_prompt_template.txt)")
+                    help="override prompt template path; otherwise use the central prompt registry")
     ap.add_argument("--max-tokens", type=int, default=None,
-                     help="override max_output_tokens for this run only (doesn't touch config.yaml "
-                          "or other splits' cache keys)")
+                    help="override max_output_tokens for this run only")
     ap.add_argument("--temperature", type=float, default=None,
-                     help="override config.yaml's llm.temperature for this run only (e.g. >0 for "
-                          "multi-round sampling -- see scripts/extract_multiround.py)")
+                    help="override config.yaml's llm.temperature for this run only")
     ap.add_argument("--cache-salt", default=None,
-                     help="mixed into the LLM cache key only, never sent to the model -- lets "
-                          "repeated calls with identical (prompt, temperature, max_tokens) force "
-                          "independent network calls instead of replaying one cache entry "
-                          "(multi-round sampling)")
+                    help="mixed into the LLM cache key only; useful for multi-round sampling")
     args = ap.parse_args()
 
     wd = work_dir(args.dataset, args.split)
-    prompt_path = args.prompt or f"prompts/{args.dataset}_prompt_template.txt"
-    template = open(prompt_path, encoding="utf-8").read()
+    template, prompt_locks, prompt_desc = _load_template(args.dataset, args.prompt)
     docs = list(read_jsonl(wd / "docs.jsonl"))
     if args.limit:
         docs = docs[: args.limit]
-    print(f"using prompt template: {prompt_path}")
+    print(f"using prompt template: {prompt_desc}")
+    write_prompt_lock(wd / "prompt_lock.json", prompt_locks)
 
     client = LLMClient(wd / "llm_cache")
 
@@ -106,9 +109,7 @@ def main():
             rows_by_doc_id[row["doc_id"]] = row
             status_counts[row["parse_status"]] = status_counts.get(row["parse_status"], 0) + 1
 
-    # preserve docs.jsonl order in the output file
     rows = [rows_by_doc_id[doc["doc_id"]] for doc in docs]
-
     write_jsonl(wd / "extraction_raw.jsonl", rows)
     print(f"wrote {len(rows)} rows to {wd/'extraction_raw.jsonl'}")
     print(f"status counts: {status_counts}")

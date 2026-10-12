@@ -1,104 +1,117 @@
-# KG Pipeline — 自动构建 + 检索知识图谱流水线
+# KG Pipeline
 
-从文本抽取实体/关系三元组，构建知识图谱，并在 DocRED / GenWiki 上对齐 GraphRefine/GenRES
-协议评测（G-BLEU / G-ROUGE / G-BERTScore / GenRES 五维），提供检索与可视化界面。
+一个面向知识抽取、图谱构建、检索与可视化的项目骨架，当前按 **Pipeline / Graph / Services / Web** 四层拆分。
 
-- 方案与创新点：`docs/SOLUTION.md`
-- 技术设计：`docs/DESIGN.md`（v4）
-- 评测结果与差距归因：`docs/ACCURACY.md`
+## 目录结构
 
-## 1. 环境
+```text
+apps/                          服务启动入口
+  backend_server.py            后端服务：静态页面 + pipeline 侧 API
+  kg_server.py                 图谱服务：图谱 / 检索 / Agent API
 
-```bash
-uv venv .venv --python 3.11
-uv pip install -r requirements.txt   # 若缺失，见 pyproject/uv.lock
-cp .env.example .env                 # 填写 SHEEPWALL_API_KEY 等（.env 已在 .gitignore，勿提交）
+core/                          配置、路径、I/O、LLM 基础能力
+prompting/                     PromptBuilder + PromptStore
+assistant/                     TCM Agent Loop
+graph/
+  merge/                       多轮抽取合并
+  retrieval/                   图谱检索
+services/                      backend / kg server 实现
+
+resources/
+  prompts/                     统一提示词目录（按域 / 数据集 / 版本管理）
+  schemas/                     统一 schema 目录
+
+src/                           pipeline 阶段入口脚本
+preprocess/                    预处理入口脚本
+scripts/                       研究 / 运维 / 实验脚本
+web/                           前端（纯前端项目）
+
+data/
+  raw/                         原始输入数据
+  pipeline/<dataset>/splits/   pipeline 运行数据
+  graph/<dataset>/<graph>/     发布后的知识图谱数据
+
+tests/
 ```
 
-关键依赖：`requests tiktoken pyyaml json-repair networkx numpy scikit-learn gensim faiss-cpu
-bert-score rouge-score nltk`。
+## Prompt 管理
 
-LLM 网关（SHEEPWALL）通过环境变量读取，**key 绝不写进代码/日志**：
+所有可配置提示词统一放在 `resources/prompts/`：
 
-```bash
-export SHEEPWALL_API_KEY=...         # 或写进 .env
-export SHEEPWALL_BASE_URL=https://test.sheepwall.com/fe-llm-gateway/
-export SHEEPWALL_MODEL=deepseek-v4-pro
-export SHEEPWALL_EMBEDDING_MODEL=azure/text-embedding-3-small
+```text
+resources/prompts/
+  docred/v1/
+  genwiki/v1/
+  tcm/v1|v2|v2_pro|v4|v4_pro/
+  simplify/v1/
+  genres/v1/
+  retrieval_summary/v1/
+  registry.yaml                当前默认版本注册表
 ```
 
-> `deepseek-v4-pro` 是推理模型，抽取调用走 `/v1/messages` 并 `"thinking":{"type":"disabled"}`
-> 关闭思维链（否则推理会吃掉全部 8192 输出预算、JSON 为空）。见 `src/llm_client.py`。
+运行时统一通过 `prompting.PromptStore` 读取；抽取阶段会把本次使用的 prompt 版本写入 `prompt_lock.json`。
 
-## 2. 流水线（六阶段）
+## 数据布局
 
-所有命令在仓库根目录执行，`{dataset}` ∈ `docred|genwiki`，`{split}` ∈ `eval200|test|dev`。
+- Pipeline 中间产物：`data/pipeline/<dataset>/splits/<split>/`
+- 多轮实验：`data/pipeline/<dataset>/splits/experiments/<experiment>/rounds/<round>/`
+- 图谱产物：`data/graph/<dataset>/<graph>/`
+
+这样可以做到：
+- pipeline 数据和最终图谱数据分离
+- 多轮 round 归档到同一个 experiment 下面
+- 后端服务只关心 pipeline 数据，图谱服务只关心 graph 数据
+
+## 常用命令
+
+### 1) 生成 / 运行 pipeline
 
 ```bash
-# 阶段0 准备（schema / docs / gold / few-shot / prompt）
-.venv/bin/python src/build_docred_eval200.py           # DocRED eval200 评测集对齐 GenRES
-.venv/bin/python src/build_genwiki.py --split test     # GenWiki schema+docs+gold+prompt
-
-# 阶段1 抽取（唯一 LLM 调用点，带磁盘缓存与并发）
-.venv/bin/python src/stage1_extract.py --dataset docred --split eval200 --workers 12
-
-# 阶段2 校验+溯源  阶段3 对齐  阶段4 建图
+.venv/bin/python src/build_docred_eval200.py
+.venv/bin/python src/build_genwiki.py --split test --version v1
+.venv/bin/python src/stage1_extract.py --dataset docred --split eval200
 .venv/bin/python src/stage2_validate.py --dataset docred --split eval200
-.venv/bin/python src/stage3_align.py    --dataset docred --split eval200
+.venv/bin/python src/stage3_align.py --dataset docred --split eval200
 .venv/bin/python src/stage4_build_graph.py --dataset docred --split eval200
-
-# 阶段5 评测（BLEU/ROUGE/BERTScore + GenRES；--skip-genres/--skip-bertscore 可分跑）
 .venv/bin/python src/stage5_eval.py --dataset docred --split eval200
-
-# 阶段6 检索索引（FAISS）
 .venv/bin/python src/stage6_index.py --dataset docred --split eval200
+.venv/bin/python src/stage7_merge.py --dataset docred --splits eval200 --out merged
 ```
 
-阶段 2–6 均可在不触发 LLM 的情况下从上游文件重跑。
-
-## 3. 检索与可视化
-
-前端改动后需要先构建（生成物在 web/dist/，serve.py 只读这个目录）：
+### 2) 多轮抽取实验
 
 ```bash
-cd web && npm install && npm run build && cd ..
-.venv/bin/python src/serve.py --port 8787
-# 浏览器打开 http://localhost:8787
+.venv/bin/python scripts/extract_multiround.py \
+  --dataset TCM \
+  --split neike_trial \
+  --experiment neike_trial_v4_pro_3round \
+  --rounds 3 \
+  --temperature 0.5
 ```
 
-前端开发（热重载，API 请求会自动代理到 8787）：
+### 3) 启动服务
+
+问答 Agent 使用 OpenAI `gpt-4.1`。启动图谱服务前，在仓库根目录的 `.env` 中设置
+`OPENAI_API_KEY`；问答中的向量检索使用 OpenAI `text-embedding-3-small`。
 
 ```bash
+# 后端服务：页面 + pipeline API
+.venv/bin/python apps/backend_server.py --port 53785
+
+# 图谱服务：图谱 / 检索 / Agent API
+.venv/bin/python apps/kg_server.py --port 53786
+
+# 前端开发
 cd web && npm run dev
-# 浏览器打开 http://localhost:5173，同时保持 src/serve.py 在 8787 运行
 ```
 
-部署到生产服务器（czt666.cn/kg/，nginx 反代到 127.0.0.1:8787，kg-pipeline.service 管理进程）：
+Vite 开发代理：
+- `/api/*` -> backend server
+- `/api/kg/*` -> kg server
 
-```bash
-./deploy.sh              # 同步代码 + 前端构建产物，重启服务
-./deploy.sh --data       # 追加同步 data/work/（跑完新的 pipeline 阶段后才需要，较慢）
-./deploy.sh --env        # 追加同步 .env（换了 API key 才需要）
-```
+## 设计原则
 
-三个面板：原文视图（mentions 坐标高亮、点击反查实体）· 图谱视图（vis-network 节点/边，
-点击节点看属性）· 检索面板（语义检索 + 词法匹配 + 图搜索 BFS 三路并排）。
-
-命令行检索：
-
-```bash
-.venv/bin/python src/retrieval.py --dataset docred --split eval200 --query "Who founded Harvard?"
-```
-
-## 4. 目录
-
-```
-schema/{dataset}_schema.yaml        固定 schema（实体类型 + 关系 kind/domain/range）
-prompts/{dataset}_prompt_template.txt, {dataset}_fewshot.json
-src/                                各阶段脚本 + 检索 + 后端
-web/                                可视化前端（Vite + React，组件化，见 web/src/）
-data/raw/{dataset}/                 原始数据（只读）
-data/work/{dataset}/{split}/        中间文件 + eval/metrics.json
-scripts/analyze_gap.py              差距归因分析
-docs/SOLUTION.md, DESIGN.md, ACCURACY.md
-```
+- Stage 主逻辑不做算法性改写，只做职责拆分与目录重组。
+- Prompt、Schema、Data Path 全部收敛到统一注册与路径约定。
+- 前端、后端、图谱服务解耦，可独立部署。
+- 内部代码目录尽量一层语义化命名，避免仓库名和包名重复套娃。

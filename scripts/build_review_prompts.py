@@ -1,7 +1,7 @@
 """Assemble per-document review material for manual (LLM-in-the-loop) extraction QA.
 
 Takes the first N docs of a TCM split, and for each one concatenates:
-  1. the entity/relation rule tables (pulled straight from schema/tcm_schema.yaml,
+  1. the entity/relation rule tables (pulled straight from the canonical TCM schema file,
      same rendering as build_tcm_prompt.py so the reviewer sees exactly what the
      extractor was told),
   2. the full original text (docs.jsonl),
@@ -21,6 +21,7 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 from build_tcm_prompt import render_entity_types, render_relation_table  # noqa: E402
+from core.common import schema_path, work_dir
 
 
 def read_jsonl(path):
@@ -37,20 +38,20 @@ def main():
     ap.add_argument("--prompt-template", default=None,
                      help="if set, use this file's rule text verbatim (everything before "
                           "the trailing 文本：{TEXT} placeholder) instead of re-rendering "
-                          "from schema/tcm_schema.yaml -- keeps the review prompt byte-faithful "
+                          "from resources/schemas/tcm.yaml -- keeps the review prompt byte-faithful "
                           "to whatever prompt actually produced the extraction being reviewed")
     args = ap.parse_args()
 
-    work_dir = Path("data/work") / args.dataset / args.split
-    docs = {d["doc_id"]: d for d in read_jsonl(work_dir / "docs.jsonl")}
-    extractions = read_jsonl(work_dir / "extraction_valid.jsonl")[: args.n]
+    wd = work_dir(args.dataset, args.split)
+    docs = {d["doc_id"]: d for d in read_jsonl(wd / "docs.jsonl")}
+    extractions = read_jsonl(wd / "extraction_valid.jsonl")[: args.n]
 
     if args.prompt_template:
         template_text = Path(args.prompt_template).read_text()
         rule_text = template_text.split("文本：\n{TEXT}")[0].rstrip()
         rules = f"## 抽取规则（含示例，原样摘自实际抽取用的 prompt 模板）\n\n{rule_text}\n"
     else:
-        schema = yaml.safe_load(Path("schema/tcm_schema.yaml").read_text())
+        schema = yaml.safe_load(schema_path("TCM").read_text())
         entity_block = render_entity_types(schema)
         relation_table = render_relation_table(schema["relations"])
 

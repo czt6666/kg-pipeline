@@ -15,14 +15,14 @@
 
 ### 1.1 Schema 文件与数据集标签的关系
 
-`schema/{dataset}_schema.yaml` 是本项目维护的常量文件。其字段分两类：
+`resources/schemas/{dataset}.yaml` 是本项目维护的常量文件。其字段分两类：
 
 | 字段                    | 来源       | 说明                                                         |
 | ----------------------- | ---------- | ------------------------------------------------------------ |
 | 实体类型集合            | 数据集官方 | DocRED 官方 NER 标签集 `{PER, ORG, LOC, TIME, NUM, MISC}`，取自 `train_annotated.json` 中 `vertexSet[*][*].type` |
 | 关系 `name` / `pid`     | 数据集官方 | DocRED 官方 96 种关系，取自 `rel_info.json`（Wikidata P-id → 关系名） |
 | 关系 `kind`             | 本项目标注 | `intrinsic` / `relational`，人工标注一次，依据为 range 是否为 TIME/NUM 字面量 |
-| 关系 `domain` / `range` | 本项目统计 | 从 DocRED 训练集 gold 三元组统计每个关系的 (head_type, tail_type) 分布，取累计覆盖 ≥ 95% 的类型集合；统计脚本输出 `schema/{dataset}_domain_range_stats.json` 供审查 |
+| 关系 `domain` / `range` | 本项目统计 | 从 DocRED 训练集 gold 三元组统计每个关系的 (head_type, tail_type) 分布，取累计覆盖 ≥ 95% 的类型集合；统计脚本输出 `resources/schemas/{dataset}_domain_range_stats.json` 供审查 |
 
 即：schema 文件中"实体类型能取什么值、关系能取什么名"由数据集官方标签决定，抽取时 LLM 只能在这两个集合内选择；`kind / domain / range` 是本项目为校验与存储附加的元数据，不改变标签集合本身。
 
@@ -37,7 +37,7 @@
 GenWiki 无官方实体类型标签，关系为 DBpedia property，无固定枚举。处理方式：
 
 - 实体类型：复用 DocRED 的 6 类作为抽取约束，由 LLM 在抽取时打标。评测不比较类型，仅用于 domain/range 校验和检索过滤。
-- 关系：对 GenWiki 训练集三元组按 property 统计频次，取累计覆盖 ≥ 90% 的 property 进 schema，长尾不进表。抽取时不在表内的关系丢弃。覆盖率数字写入 `schema/genwiki_relation_coverage.json` 并在报告中说明。
+- 关系：对 GenWiki 训练集三元组按 property 统计频次，取累计覆盖 ≥ 90% 的 property 进 schema，长尾不进表。抽取时不在表内的关系丢弃。覆盖率数字写入 `resources/schemas/genwiki_relation_coverage.json` 并在报告中说明。
 - `kind / domain / range`：同 1.1 方法从 GenWiki 训练集统计，类型分布依赖 LLM 打标结果，因此先在 1000 篇上跑一次抽取得到类型分布再统计。
 
 ### 1.4 Schema 文件格式
@@ -142,7 +142,7 @@ relations:
 
 ### 2.4 Few-shot 样例
 
-固定 3 条，从数据集训练集选取，人工核对 JSON 与 schema 完全一致后写入 `prompts/{dataset}_fewshot.json`。三条样例合计覆盖：
+固定 3 条，从数据集训练集选取，人工核对 JSON 与 schema 完全一致后写入 `resources/prompts/{dataset}/v*/fewshot.json`。三条样例合计覆盖：
 
 1. 同一实体以全名、简称、代词多次出现（示范 mentions 填法）。
 2. 同一文本同时含 intrinsic 与 relational 关系。
@@ -198,13 +198,13 @@ relations:
 data/
 ├── raw/
 │   └── {dataset}/                     原始数据集，只读
-├── schema/
-│   ├── {dataset}_schema.yaml          1.4 节格式
+├── resources/schemas/
+│   ├── {dataset}.yaml          1.4 节格式
 │   ├── {dataset}_domain_range_stats.json
 │   └── genwiki_relation_coverage.json
-├── prompts/
-│   ├── {dataset}_fewshot.json         [{text, output}] ×3
-│   └── {dataset}_prompt_template.txt  2.3 节模板
+├── resources/prompts/
+│   ├── <dataset>/<version>/fewshot.json         [{text, output}] ×3
+│   └── <dataset>/<version>/template.txt  2.3 节模板
 └── work/{dataset}/{split}/
     ├── run_manifest.json
     ├── docs.jsonl

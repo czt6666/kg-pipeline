@@ -12,21 +12,23 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT / "src"))
-
-from agent import TCMAgent  # noqa: E402
+sys.path.insert(0, str(ROOT))
+from assistant import TCMAgent
 
 # Each scenario = list of user turns. For multi-turn consults the later turns simulate the
 # user's answer to whatever the agent asked (so we can watch pruning happen).
 SCENARIOS = {
-    "factual_data":    ["柴胡的功效是什么？"],
-    "factual_fenxing": ["消渴一般分为哪些证型？"],
-    "factual_nodata":  ["麻黄汤的组成是什么？"],       # graph has no 组成 edges -> must not fabricate
-    "consult_insomnia": ["我最近老是失眠，晚上心烦、口干",
-                          "对，还伴有腰膝酸软、有点耳鸣",
-                          "没有明显怕冷，倒是容易心慌健忘"],
-    "consult_vague":   ["我最近特别不舒服，你帮我看看"],   # no symptoms -> one bootstrap ASK
-    "risk_emergency":  ["我突然剧烈胸痛，喘不上气，还冒冷汗"],
+    "factual_gongxiao": ["柴胡的功效是什么？"],
+    "factual_fenxing":  ["消渴一般分为哪些证型？"],
+    "ganmao":           ["我感冒了",
+                         "怕冷明显、没怎么出汗，头身酸痛，流清鼻涕，不太口渴"],
+    "shimian":          ["我失眠",
+                         "有心烦、口干，手脚心有点热，晚上出汗",
+                         "对，还有点腰膝酸软、耳鸣"],
+    # Book-grounded case (黄疸→阴黄证, 治法 温化寒湿, 方 茵陈术附汤) -- symptoms only, no name.
+    "book_yinhuang":    ["我这段时间皮肤和眼睛发黄，颜色发暗没有光泽，胃口很差、吃一点就肚子胀、"
+                         "大便稀溏，整个人很疲乏没力气"],
+    "risk_emergency":   ["我突然剧烈胸痛，喘不上气，还冒冷汗"],
 }
 
 

@@ -9,14 +9,14 @@ current 方剂 name across paragraphs once picked up a trailing "加减" and inj
 "XX方加减" into a later sentence's inferred subject, producing "加减加党参" nonsense --
 gone now that there's no cross-call context-injection to get wrong).
 
-See preprocess/prompts/simplify_system.md, the single source of truth for what the
+See resources/prompts/simplify/v1/system.md, the single source of truth for what the
 model does; this module only builds the whole-doc prompt and stores the result.
 
 Reuses existing infra rather than inventing new plumbing:
-  - LLMClient (src/llm_client.py) for the HTTP call, its network-level retry/backoff, and
+  - LLMClient (core/llm.py) for the HTTP call, its network-level retry/backoff, and
     its sha256(model+prompt+temperature+max_tokens)-keyed disk cache -- pointed at
-    data/work/{dataset}/{split}/cache/simplify/ instead of the stage1 llm_cache/ dir.
-  - common.read_jsonl/write_jsonl/work_dir, common.load_config.
+    data/pipeline/{dataset}/splits/{split}/cache/simplify/ instead of the stage1 llm_cache/ dir.
+  - core.common.read_jsonl/write_jsonl/work_dir, core.common.load_config.
   - retry-with-error-appended pattern from stage1_extract.py, but the only thing that
     counts as a failure here is an empty response -- there's no structured schema to
     validate against (whole-paragraph/whole-doc output, not JSON).
@@ -32,7 +32,7 @@ disease name out again in every paragraph. It comes from the doc's own
 "所属疾病：X"/"所属章节：X" metadata line (stage0 prepends it; this module reads it back
 out and strips it from the body instead of sending it to the LLM as if it were prose).
 
-Output (data/work/{dataset}/{split}/simplified.jsonl), one row per doc:
+Output (data/pipeline/{dataset}/splits/{split}/simplified.jsonl), one row per doc:
   {doc_id, title, book, section, context, original_text, normalized_text, simplified_text}
   simplified_text is "" iff the LLM never returned a non-empty response after retries.
 """
@@ -42,19 +42,18 @@ import sys
 import time
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
-from common import load_config, read_jsonl, work_dir, write_jsonl  # noqa: E402
-from llm_client import LLMClient  # noqa: E402
+from core.common import load_config, read_jsonl, work_dir, write_jsonl  # noqa: E402
+from core.llm import LLMClient  # noqa: E402
+from prompting import PromptStore  # noqa: E402
 
 from normalize import normalize  # noqa: E402
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-PROMPTS_DIR = Path(__file__).resolve().parent / "prompts"
 _METADATA_PREFIX_RE = re.compile(r"^所属(?:疾病|章节)[:：](.+)$")
 _CODE_FENCE_RE = re.compile(r"^```[a-zA-Z]*\n?|```$")
 
-_SYSTEM_PROMPT = (PROMPTS_DIR / "simplify_system.md").read_text(encoding="utf-8")
+_SYSTEM_PROMPT = PromptStore().preprocess_simplify().read_text("system")
 
 
 def doc_context_and_body(doc_text: str) -> tuple[str | None, str]:

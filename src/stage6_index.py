@@ -12,8 +12,8 @@ from pathlib import Path
 import faiss
 import numpy as np
 
-from common import read_jsonl, work_dir, write_jsonl
-from llm_client import LLMClient
+from core.common import read_jsonl, work_dir, write_jsonl
+from core.llm import LLMClient
 from metrics_gscore import linearize
 
 

@@ -10,6 +10,12 @@ llm:
   retry_max_delay_s: 30.0
   request_timeout_s: 120
 
+qa:
+  base_url: https://api.openai.com/
+  api_key_env: OPENAI_API_KEY
+  model: gpt-4.1
+  embedding_model: text-embedding-3-small
+
 extraction:
   max_input_tokens: 3500
   chunk_overlap: 0.1
@@ -32,10 +38,10 @@ preprocess:
 
 datasets:
   docred:
-    schema_path: schema/docred_schema.yaml
+    schema_path: resources/schemas/docred.yaml
     relation_coverage_threshold: 0.95
   genwiki:
-    schema_path: schema/genwiki_schema.yaml
+    schema_path: resources/schemas/genwiki.yaml
     relation_coverage_threshold: 0.90
   TCM:
-    schema_path: schema/tcm_schema.yaml
+    schema_path: resources/schemas/tcm.yaml

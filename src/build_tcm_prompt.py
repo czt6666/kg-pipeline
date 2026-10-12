@@ -1,4 +1,4 @@
-"""Stage 0 (TCM): render prompts/tcm_prompt_template.txt from schema + fewshot.
+"""Stage 0 (TCM): render the TCM extraction prompt template from schema + fewshot.
 
 Same rationale as build_docred_prompt.py: the prompt prefix should be byte-identical
 across calls (gateway prefix-cache friendly), so entity/relation text and the few-shot
@@ -13,10 +13,11 @@ genres (教材/方书/本草/医论), not just one disease-entry textbook layout
 Shared load/write/report plumbing lives in prompt_builder.PromptBuilder; this module
 only supplies the TCM-specific `render()`.
 """
+import argparse
 import json
 from pathlib import Path
 
-from prompt_builder import PromptBuilder
+from prompting.builder import PromptBuilder
 
 
 def render_entity_types(schema):
@@ -44,9 +45,9 @@ def render_fewshot(examples):
 
 
 class TCMPromptBuilder(PromptBuilder):
-    schema_path = Path("schema/tcm_schema.yaml")
-    fewshot_path = Path("prompts/tcm_fewshot.json")
-    out_path = Path("prompts/tcm_prompt_template.txt")
+    schema_path = Path("resources/schemas/tcm.yaml")
+    fewshot_path = Path("resources/prompts/tcm/v1/fewshot.json")
+    out_path = Path("resources/prompts/tcm/v1/template.txt")
 
     def render(self, schema, fewshot):
         n_types = len(schema["entity_types"])
@@ -100,5 +101,15 @@ class TCMPromptBuilder(PromptBuilder):
 """
 
 
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--version", default="v1")
+    args = ap.parse_args()
+    TCMPromptBuilder(
+        fewshot_path=Path(f"resources/prompts/tcm/{args.version}/fewshot.json"),
+        out_path=Path(f"resources/prompts/tcm/{args.version}/template.txt"),
+    ).build()
+
+
 if __name__ == "__main__":
-    TCMPromptBuilder().build()
+    main()

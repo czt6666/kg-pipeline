@@ -9,7 +9,7 @@ import { mergeKey, mergeLabel } from "../utils/merged.js";
 
 /* 检索：面向 agent 的精确名词查询——关键词/语义/图 Pattern 三路召回 + 融合排序，命中的
    候选实体消歧后，中间展示子图（profile 一跳扇出 + 命中的多跳 pattern 拼成的可视化图），
-   右侧展示子图对应的可读解释文本 + 结构化事实列表（src/retrieval/pipeline.py）。 */
+   右侧展示子图对应的可读解释文本 + 结构化事实列表（graph/retrieval/pipeline.py）。 */
 export function Retrieval() {
   const [mergedList, setMergedList] = useState([]);
   const [selectedKey, setSelectedKey] = useState(null);
@@ -34,7 +34,7 @@ export function Retrieval() {
   const [rightW, rightDrag] = useResizer(380, { min: 280, max: 600, invert: true });
 
   useEffect(() => {
-    getJSON("/api/merged").then(list => {
+    getJSON("/api/kg/merged").then(list => {
       setMergedList(list);
       if (list.length) setSelectedKey(mergeKey(list[0]));
     });
@@ -46,12 +46,12 @@ export function Retrieval() {
 
   // The one LLM call in this flow (a few seconds) -- split into its own request so the
   // facts/subgraph render immediately instead of the whole panel blocking on it (see
-  // src/retrieval/pipeline.py's module docstring on why expand_entity itself never calls
+  // graph/retrieval/pipeline.py's module docstring on why expand_entity itself never calls
   // the LLM anymore). Guards against a stale response landing after the user has already
   // navigated elsewhere by checking the entity_id still matches when it resolves.
   const fetchSummary = (entityId) => {
     setSummaryPendingId(entityId);
-    getJSON(`/api/retrieval/summary?dataset=${dataset}&merge=${merge}&entity_id=${encodeURIComponent(entityId)}&top_k=10`)
+    getJSON(`/api/kg/retrieval/summary?dataset=${dataset}&merge=${merge}&entity_id=${encodeURIComponent(entityId)}&top_k=10`)
       .then(r => {
         setActiveExpanded(prev => (prev && prev.seed.entity_id === entityId) ? { ...prev, summary: r.summary } : prev);
       })
@@ -63,7 +63,7 @@ export function Retrieval() {
     if (!term.trim() || !dataset) return;
     setSearching(true);
     setResult(null); setActiveId(null); setActiveExpanded(null); setFocusStack([]); setSummaryPendingId(null);
-    getJSON(`/api/retrieval/search?dataset=${dataset}&merge=${merge}&term=${encodeURIComponent(term.trim())}&top_k=10`)
+    getJSON(`/api/kg/retrieval/search?dataset=${dataset}&merge=${merge}&term=${encodeURIComponent(term.trim())}&top_k=10`)
       .then(r => {
         setResult(r);
         setSearching(false);
@@ -88,7 +88,7 @@ export function Retrieval() {
       return;
     }
     setExpandLoading(true);
-    getJSON(`/api/retrieval/expand?dataset=${dataset}&merge=${merge}&entity_id=${encodeURIComponent(entityId)}&top_k=10`)
+    getJSON(`/api/kg/retrieval/expand?dataset=${dataset}&merge=${merge}&entity_id=${encodeURIComponent(entityId)}&top_k=10`)
       .then(r => { setActiveExpanded(r); setExpandLoading(false); fetchSummary(entityId); })
       .catch(() => setExpandLoading(false));
   };

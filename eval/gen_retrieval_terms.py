@@ -3,7 +3,7 @@ directly from a merged graph's edges. Unlike eval/questions.jsonl (whole descrip
 sentences, built for a "user asks a question" contract), this matches the hybrid retrieval
 module's actual input contract -- a precise term in, and the resulting facts should include
 the expected relation target -- so it's a smoke-test/regression baseline for the module
-itself (src/retrieval/pipeline.py), not a substitute for the existing QA benchmark.
+itself (graph/retrieval/pipeline.py), not a substitute for the existing QA benchmark.
 
 Usage: .venv/bin/python eval/gen_retrieval_terms.py [--dataset TCM --merge merged_neike
     --per-relation 10 --min-name-len 2 --seed 0]
@@ -16,9 +16,7 @@ from collections import defaultdict
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT / "src"))
-
-from common import read_jsonl, work_dir  # noqa: E402
+from core.common import graph_dir, read_jsonl
 
 # Restrict sampling to the seed types the hybrid module actually curates named patterns for
 # (see docs/retrieval_graph_patterns.md 2.2) so every generated case is answerable by the
@@ -37,7 +35,7 @@ def main():
     ap.add_argument("--out", default=str(ROOT / "eval/retrieval_terms.jsonl"))
     args = ap.parse_args()
 
-    wd = work_dir(args.dataset, args.merge)
+    wd = graph_dir(args.dataset, args.merge)
     nodes = {n["entity_id"]: n for n in read_jsonl(wd / "nodes.jsonl")}
     edges = list(read_jsonl(wd / "edges.jsonl"))
 

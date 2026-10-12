@@ -15,8 +15,7 @@ import re
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
-from common import read_jsonl, work_dir, write_jsonl  # noqa: E402
+from core.common import read_jsonl, work_dir, write_jsonl
 
 _METADATA_PREFIX_RE = re.compile(r"^所属(?:疾病|章节)[:：].+$")
 

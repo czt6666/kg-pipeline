@@ -3,9 +3,16 @@ __pycache__/
 *.pyc
 .venv/
 data/raw/
-data/cache/
 data/work/
+data/pipeline/
+data/cache/
+data/pipeline/
+data/graph/
 *.log
 node_modules/
+web/node_modules/
 web/dist/
 .DS_Store
+.claude/
+.pytest_cache/
+eval/hybrid_results_*.jsonl

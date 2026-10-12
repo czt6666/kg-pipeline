@@ -20,7 +20,7 @@ This ties this stage to running on macOS (PyObjC + Vision.framework). If this pi
 ever needs to run on Linux CI, swap in PaddleOCR (best non-Apple option for Chinese) --
 same ocr_pages.jsonl contract.
 
-Output: data/work/{dataset}/{split}/ocr_pages.jsonl, one row per page:
+Output: data/pipeline/{dataset}/splits/{split}/ocr_pages.jsonl, one row per page:
   {page_index (0-based, into the source PDF), text}
 
 Resumable: if ocr_pages.jsonl already has a row for a page_index, that page is skipped,
@@ -34,7 +34,7 @@ import Vision
 from Foundation import NSData
 from tqdm import tqdm
 
-from common import read_jsonl, work_dir, write_jsonl
+from core.common import read_jsonl, work_dir, write_jsonl
 
 RECOGNITION_LANGUAGES = ["zh-Hans", "en-US"]
 
@@ -80,7 +80,7 @@ def extract_page_jpeg(page) -> bytes | None:
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--dataset", default="TCM")
-    ap.add_argument("--split", required=True, help="output subdir under data/work/TCM/")
+    ap.add_argument("--split", required=True, help="output subdir under data/pipeline/TCM/splits/")
     ap.add_argument("--pdf", required=True, help="path to the source PDF")
     ap.add_argument("--start-page", type=int, required=True, help="0-based, inclusive")
     ap.add_argument("--end-page", type=int, required=True, help="0-based, inclusive")

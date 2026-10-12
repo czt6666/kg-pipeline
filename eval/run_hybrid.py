@@ -1,5 +1,5 @@
 """Hybrid retrieval eval: for each case in eval/retrieval_terms.jsonl, run
-retrieval.pipeline.hybrid_search(term) and check whether any expected answer shows up in
+graph.retrieval.pipeline.hybrid_search(term) and check whether any expected answer shows up in
 the resulting facts text. Mirrors eval/run_baseline.py's structure/match rule (see that
 file's docstring) but against the new module's own contract (precise term in, facts out)
 rather than eval/questions.jsonl's descriptive-sentence contract.
@@ -19,9 +19,7 @@ from collections import defaultdict
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT / "src"))
-
-from retrieval.pipeline import hybrid_search  # noqa: E402
+from graph.retrieval.pipeline import hybrid_search
 
 
 def normalize(s):

@@ -10,7 +10,7 @@ book's own semantic units is what makes "分段落的提取详细结果" (per-us
 meaningful -- one doc == one syndrome entry or one citation, not an arbitrary token window.
 
 Each output doc is prefixed with "所属疾病：{disease}" for entity-linking context (see
-prompts/tcm_fewshot.json, which is written in this exact style) since a syndrome's own
+resources/prompts/tcm/v1/fewshot.json, which is written in this exact style) since a syndrome's own
 paragraph rarely repeats the disease name.
 
 文献推介 (bibliography / journal citation lists) is dropped: it is not TCM domain
@@ -19,7 +19,7 @@ content, just reference metadata, and would only inject author/journal-name nois
 itself instructs the extractor to skip patient-identifying particulars (see rule 6 in
 build_tcm_prompt.py's template).
 
-Output: data/work/TCM/{split}/docs.jsonl, one row per paragraph-level chunk:
+Output: data/pipeline/TCM/splits/{split}/docs.jsonl, one row per paragraph-level chunk:
   {doc_id, title, text, book, section, page_start, page_end}
 
 OCR-cleanup (load_pages/smart_join/strip_figure_blocks/page_range_for) and the CLI

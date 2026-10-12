@@ -1,0 +1,47 @@
+[
+  {
+    "text": "感冒 …… （一）风寒束表证 症状：恶寒重，发热轻，无汗，头痛，鼻塞流清涕，舌苔薄白，脉浮紧。证机概要：风寒外束，卫阳被郁，肺气不宣。治法：辛温解表。代表方：麻黄汤加减。常用药：麻黄、桂枝发汗解表，杏仁宣肺平喘，炙甘草调和诸药。",
+    "output": {
+      "entities": [
+        {"id": "e1", "name": "感冒", "type": "疾病", "mentions": ["感冒"]},
+        {"id": "e2", "name": "风寒束表证", "type": "证候", "mentions": ["风寒束表证"]},
+        {"id": "e3", "name": "恶寒重", "type": "症状", "mentions": ["恶寒重"]},
+        {"id": "e4", "name": "发热轻", "type": "症状", "mentions": ["发热轻"]},
+        {"id": "e5", "name": "无汗", "type": "症状", "mentions": ["无汗"]},
+        {"id": "e6", "name": "头痛", "type": "症状", "mentions": ["头痛"]},
+        {"id": "e7", "name": "鼻塞流清涕", "type": "症状", "mentions": ["鼻塞流清涕"]},
+        {"id": "e8", "name": "舌苔薄白", "type": "症状", "mentions": ["舌苔薄白"]},
+        {"id": "e9", "name": "脉浮紧", "type": "症状", "mentions": ["脉浮紧"]},
+        {"id": "e10", "name": "辛温解表", "type": "治法功效", "mentions": ["辛温解表"]},
+        {"id": "e11", "name": "麻黄汤", "type": "方剂", "mentions": ["麻黄汤", "麻黄汤加减"]},
+        {"id": "e12", "name": "麻黄", "type": "中药", "mentions": ["麻黄"]},
+        {"id": "e13", "name": "桂枝", "type": "中药", "mentions": ["桂枝"]},
+        {"id": "e14", "name": "杏仁", "type": "中药", "mentions": ["杏仁"]},
+        {"id": "e15", "name": "炙甘草", "type": "中药", "mentions": ["炙甘草"]},
+        {"id": "e16", "name": "发汗解表", "type": "治法功效", "mentions": ["发汗解表"]},
+        {"id": "e17", "name": "宣肺平喘", "type": "治法功效", "mentions": ["宣肺平喘"]},
+        {"id": "e18", "name": "调和诸药", "type": "治法功效", "mentions": ["调和诸药"]}
+      ],
+      "triples": [
+        {"head": "e1", "relation": "分型", "tail": "e2"},
+        {"head": "e2", "relation": "表现为", "tail": "e3"},
+        {"head": "e2", "relation": "表现为", "tail": "e4"},
+        {"head": "e2", "relation": "表现为", "tail": "e5"},
+        {"head": "e2", "relation": "表现为", "tail": "e6"},
+        {"head": "e2", "relation": "表现为", "tail": "e7"},
+        {"head": "e2", "relation": "表现为", "tail": "e8"},
+        {"head": "e2", "relation": "表现为", "tail": "e9"},
+        {"head": "e2", "relation": "治法", "tail": "e10"},
+        {"head": "e2", "relation": "方用", "tail": "e11"},
+        {"head": "e11", "relation": "组成", "tail": "e12"},
+        {"head": "e11", "relation": "组成", "tail": "e13"},
+        {"head": "e11", "relation": "组成", "tail": "e14"},
+        {"head": "e11", "relation": "组成", "tail": "e15"},
+        {"head": "e12", "relation": "功效", "tail": "e16"},
+        {"head": "e13", "relation": "功效", "tail": "e16"},
+        {"head": "e14", "relation": "功效", "tail": "e17"},
+        {"head": "e15", "relation": "功效", "tail": "e18"}
+      ]
+    }
+  }
+]

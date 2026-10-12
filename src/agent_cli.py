@@ -18,9 +18,8 @@ import json
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-
-from agent import TCMAgent  # noqa: E402
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from assistant import TCMAgent
 
 
 def _print_trace(state):

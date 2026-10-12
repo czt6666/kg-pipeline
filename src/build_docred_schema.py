@@ -1,8 +1,8 @@
-"""Stage 0: build schema/docred_schema.yaml from official DocRED labels.
+"""Stage 0: build resources/schemas/docred.yaml from official DocRED labels.
 
 Reads data/raw/docred/{rel_info.json,train_annotated.json} and produces:
-  - schema/docred_schema.yaml           (per DESIGN.md 1.4)
-  - schema/docred_domain_range_stats.json  (audit trail for domain/range coverage)
+  - resources/schemas/docred.yaml           (per DESIGN.md 1.4)
+  - resources/schemas/docred_domain_range_stats.json  (audit trail for domain/range coverage)
 
 Entity types and relation names/pids are taken verbatim from the official files.
 domain/range are computed as the (head_type, tail_type) pairs that cumulatively
@@ -16,7 +16,7 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 RAW_DIR = Path("data/raw/docred")
-SCHEMA_DIR = Path("schema")
+SCHEMA_DIR = Path("resources/schemas")
 COVERAGE_THRESHOLD = 0.95
 LITERAL_TYPES = {"TIME", "NUM"}
 
@@ -100,7 +100,7 @@ def main():
     }
 
     SCHEMA_DIR.mkdir(exist_ok=True)
-    with open(SCHEMA_DIR / "docred_schema.yaml", "w", encoding="utf-8") as f:
+    with open(SCHEMA_DIR / "docred.yaml", "w", encoding="utf-8") as f:
         yaml.dump(schema, f, allow_unicode=True, sort_keys=False, default_flow_style=False)
 
     with open(SCHEMA_DIR / "docred_domain_range_stats.json", "w", encoding="utf-8") as f:

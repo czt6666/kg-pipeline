@@ -1,14 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { TopBar } from "../components/TopBar.jsx";
+import { Markdown } from "../components/Markdown.jsx";
 import { getJSON, postJSON } from "../utils/api.js";
 import { mergeKey, mergeLabel } from "../utils/merged.js";
 
 /* 问答：TCM 智慧诊疗 Agent Loop 的对话界面。前端无状态——每轮把完整消息历史 POST 给
-   /api/agent/chat，后端跑一轮 Agent Loop（理解→风险→决策→检索→判断→回答/追问/分诊/转诊）
-   返回 {action, reply, trace?}。debug 开关打开时展示每轮的分阶段推理 trace（仅调试用，正式
-   回答里不含任何内部信息）。 */
+   /api/kg/agent/chat，KG 服务跑一轮单控制器 ReAct 循环（控制器每步决定 检索/追问/回答/转诊，
+   检索结果喂回继续，可多轮下钻）返回 {action, reply, candidates, evidence, trace}。后端现在
+   始终带 trace（不再需要 debug 开关才请求），前端把每一步渲染成一条 markdown 格式的推理
+   时间线，默认展开——"检索过程对用户可见"是硬要求，不是可选的调试功能。 */
 
-// 终止动作 -> 展示用的中文标签 + 颜色语义（沿用全局设计 token）。
 const ACTION_META = {
   ANSWER:   { label: "回答",   cls: "act-answer" },
   ASK:      { label: "追问",   cls: "act-ask" },
@@ -18,67 +19,98 @@ const ACTION_META = {
 };
 
 const SUGGESTIONS = [
+  "我失眠",
+  "我感冒了",
   "柴胡的功效是什么？",
-  "消渴一般分为哪些证型？",
-  "我最近老是失眠，晚上心烦、口干",
-  "这两天头晕、耳鸣，还有点腰膝酸软",
+  "我这段时间皮肤和眼睛发黄、颜色发暗，胃口差、大便稀溏、很疲乏",
 ];
 
-// 始终展示的「检索依据」：这一轮从知识图谱查到了什么（命中实体 + 事实），以及归纳出的候选证候。
-// 让检索过程对用户可见，是这个界面的硬要求。
-function EvidenceView({ evidence, candidates }) {
-  const [open, setOpen] = useState(false);
-  const hits = (evidence || []).filter(e => e.found);
-  if (!hits.length && !(candidates || []).length) return null;
-  const factCount = hits.reduce((n, e) => n + (e.facts?.length || 0), 0);
-  return (
-    <div className="evid">
-      {(candidates || []).length > 0 && (
-        <div className="evid-cands">
-          <span className="evid-cands-label">候选证候</span>
-          {candidates.map((c, i) => <span className="chip" key={i}>{c.syndrome || c.name || "?"}</span>)}
-        </div>
-      )}
-      {hits.length > 0 && (
-        <>
-          <button className="link" onClick={() => setOpen(o => !o)}>
-            {open ? "▾ 收起检索依据" : `▸ 检索依据（${hits.length} 个词条 / ${factCount} 条事实）`}
-          </button>
-          {open && (
-            <div className="evid-body">
-              {hits.map((e, i) => (
-                <div className="evid-item" key={i}>
-                  <div className="evid-head">检索「{e.query}」→ <b>{e.entity}</b>（{e.type}）</div>
-                  <ul>{(e.facts || []).map((f, j) => <li key={j}>{f}</li>)}</ul>
-                </div>
-              ))}
-            </div>
-          )}
-        </>
-      )}
-    </div>
-  );
+// controller 决策里 action 是小写的 retrieve/ask/answer/escalate（跟终止动作的大写
+// Action 枚举是两套不同的值域，分别对应"这一步决定做什么"和"这一轮最终以什么收尾"）。
+const STEP_META = {
+  controller:        { icon: "🧭", label: "决策" },
+  retrieval_result:  { icon: "🔎", label: "检索" },
+  retrieval_skipped: { icon: "🔎", label: "检索" },
+  answer:            { icon: "✍️", label: "生成回答" },
+  escalate:          { icon: "⚠️", label: "转诊建议" },
+};
+const DECISION_LABEL = { retrieve: "检索", ask: "追问", answer: "回答", escalate: "转诊" };
+
+// 把一步 trace 的结构化 output 转成一段 markdown -- 不直接 JSON.stringify，用户看的是
+// "这一步在想什么/查了什么"，不是原始数据结构。
+function stepMarkdown(step) {
+  const o = step.output || {};
+  switch (step.stage) {
+    case "controller": {
+      const lines = [`**决定：${DECISION_LABEL[o.action] || o.action}**`];
+      if (o.rationale) lines.push(`> ${o.rationale}`);
+      if (o.action === "retrieve" && o.queries?.length) {
+        lines.push("", "本步检索目标：");
+        for (const q of o.queries) {
+          const bits = [q.type, q.focus].filter(Boolean).join(" · ");
+          lines.push(`- \`${q.term}\`${bits ? `（${bits}）` : ""}`);
+        }
+      }
+      if (o.action === "ask" && o.question) {
+        lines.push("", `**追问**：${o.question}`);
+      }
+      if (o.candidates?.length) {
+        lines.push("", "候选证候：" + o.candidates.map(c => `**${c.syndrome || c.name}**${c.note ? `（${c.note}）` : ""}`).join("、"));
+      }
+      if (o.capped) {
+        lines.push("", `_预算已用尽，已强制改为${DECISION_LABEL[o.capped.includes("ask") ? "ask" : "retrieve"] || "回答"}_`);
+      }
+      return lines.join("\n");
+    }
+    case "retrieval_result": {
+      const lines = ["**检索结果**"];
+      for (const e of o.evidence || []) {
+        if (!e.found) {
+          lines.push(`- \`${e.query}\` → 未命中`);
+          continue;
+        }
+        const head = e.resolved_entity || {};
+        lines.push(`- \`${e.query}\` → **${head.name}**（${head.type}）`);
+        const facts = (e.facts || []).slice(0, 5);
+        for (const f of facts) lines.push(`  - ${f.sentence}`);
+        if ((e.facts || []).length > facts.length) lines.push(`  - _（还有 ${e.facts.length - facts.length} 条）_`);
+      }
+      return lines.join("\n");
+    }
+    case "retrieval_skipped":
+      return `**跳过检索**：${o.reason || "没有有效的检索目标"}`;
+    case "answer":
+      return "**生成回答**：根据以上对话与检索到的证据组织最终回复。";
+    case "escalate":
+      return "**转诊建议**：识别到较高风险或需线下处置的信号，直接给出就医建议，不再检索或追问。";
+    default:
+      return `\`\`\`json\n${JSON.stringify(o, null, 2)}\n\`\`\``;
+  }
 }
 
-function TraceView({ trace }) {
-  const [open, setOpen] = useState(false);
+// 推理时间线：每条助手消息下方常驻展示，默认展开——检索/决策过程对用户可见是硬要求。
+function ReasoningView({ trace }) {
+  const [open, setOpen] = useState(true);
   if (!trace || !trace.length) return null;
   return (
-    <div className="trace">
-      <button className="link" onClick={() => setOpen(o => !o)}>
-        {open ? "▾ 收起推理过程" : `▸ 查看推理过程（${trace.length} 步）`}
+    <div className="reasoning">
+      <button className="reasoning-head" onClick={() => setOpen(o => !o)}>
+        <span className="reasoning-title">{open ? "▾" : "▸"} 推理过程（{trace.length} 步）</span>
       </button>
       {open && (
-        <div className="trace-body">
-          {trace.map(s => (
-            <div className="trace-step" key={s.step}>
-              <div className="trace-head">
-                <span className="trace-stage">{s.stage}</span>
-                {s.meta?.latency_ms != null && <span className="muted">{s.meta.latency_ms}ms</span>}
+        <div className="reasoning-body">
+          {trace.map(s => {
+            const meta = STEP_META[s.stage] || { icon: "•", label: s.stage };
+            return (
+              <div className="reasoning-step" key={s.step}>
+                <div className="reasoning-step-head">
+                  <span>{meta.icon} {meta.label}</span>
+                  {s.meta?.latency_ms != null && <span className="reasoning-step-latency">{s.meta.latency_ms}ms</span>}
+                </div>
+                <Markdown>{stepMarkdown(s)}</Markdown>
               </div>
-              <pre className="trace-out">{JSON.stringify(s.output, null, 2)}</pre>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
@@ -88,16 +120,15 @@ function TraceView({ trace }) {
 export function Chat() {
   const [mergedList, setMergedList] = useState([]);
   const [selectedKey, setSelectedKey] = useState(null);
-  const [maxRounds, setMaxRounds] = useState(3);
-  const [debug, setDebug] = useState(false);
-  // messages: [{role, content, action?, trace?, error?}] — role/content 发给后端，其余仅前端展示。
+  // messages: [{role, content, action?, trace?, candidates?, error?}] — role/content 发给
+  // 后端，其余仅前端展示。
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const scrollRef = useRef(null);
 
   useEffect(() => {
-    getJSON("/api/merged").then(list => {
+    getJSON("/api/kg/merged").then(list => {
       setMergedList(list);
       if (!list.length) return;
       // 默认选合并的三本书全量图（覆盖面最广），没有就退回第一个。
@@ -122,15 +153,13 @@ export function Chat() {
     setInput("");
     setBusy(true);
     try {
-      const r = await postJSON("/api/agent/chat", {
+      const r = await postJSON("/api/kg/agent/chat", {
         messages: [...history, { role: "user", content: q }],
         dataset: selected.dataset,
         merge: selected.merge,
-        max_rounds: maxRounds,
-        debug,
       });
       setMessages(m => [...m, { role: "assistant", content: r.reply, action: r.action,
-                                evidence: r.evidence, candidates: r.candidates, trace: r.trace }]);
+                                candidates: r.candidates, trace: r.trace }]);
     } catch (e) {
       setMessages(m => [...m, { role: "assistant", content: `抱歉，出错了：${e.message}`, error: true }]);
     } finally {
@@ -148,18 +177,9 @@ export function Chat() {
           <select className="dataset-select" value={selectedKey || ""} onChange={e => setSelectedKey(e.target.value)}>
             {mergedList.map(m => <option key={mergeKey(m)} value={mergeKey(m)}>{mergeLabel(m)}</option>)}
           </select>
-          <label className="chat-ctl" title="一次咨询里最多追问几次（超过就直接给方向）">
-            追问上限
-            <select value={maxRounds} onChange={e => setMaxRounds(Number(e.target.value))}>
-              {[1, 2, 3, 4, 5].map(n => <option key={n} value={n}>{n}</option>)}
-            </select>
-          </label>
-          <label className="chat-ctl" title="显示每轮 Agent 的分阶段推理过程（仅调试）">
-            <input type="checkbox" checked={debug} onChange={e => setDebug(e.target.checked)} />
-            推理过程
-          </label>
           <button className="link" onClick={reset} disabled={!messages.length}>清空对话</button>
-          <span className="hint">TCM 智慧诊疗助手 · 中医知识科普，非线下诊疗依据。</span>
+          <span className="spacer" />
+          <span className="hint">TCM 智慧诊疗助手 · 中医知识科普，非线下诊疗依据 · 每条回复都附完整推理过程</span>
         </div>
 
         <div className="chat-wrap">
@@ -183,9 +203,18 @@ export function Chat() {
                     {m.role === "assistant" && m.action && ACTION_META[m.action] && (
                       <span className={"act-badge " + ACTION_META[m.action].cls}>{ACTION_META[m.action].label}</span>
                     )}
-                    <div className={"bubble" + (m.error ? " error" : "")}>{m.content}</div>
-                    {m.role === "assistant" && <EvidenceView evidence={m.evidence} candidates={m.candidates} />}
-                    {m.role === "assistant" && <TraceView trace={m.trace} />}
+                    <div className={"bubble" + (m.error ? " error" : "")}>
+                      {m.role === "assistant" && !m.error ? <Markdown>{m.content}</Markdown> : m.content}
+                    </div>
+                    {m.role === "assistant" && m.candidates?.length > 0 && (
+                      <div className="cand-row">
+                        <span className="cand-label">候选证候</span>
+                        {m.candidates.map((c, i) => (
+                          <span className="chip" key={i} title={c.note || ""}>{c.syndrome || c.name || "?"}</span>
+                        ))}
+                      </div>
+                    )}
+                    {m.role === "assistant" && <ReasoningView trace={m.trace} />}
                   </div>
                 </div>
               ))
@@ -194,7 +223,7 @@ export function Chat() {
               <div className="msg assistant">
                 <div className="msg-avatar">医</div>
                 <div className="msg-main">
-                  <div className="bubble"><span className="loading-row"><span className="spinner" />思考中…</span></div>
+                  <div className="bubble"><span className="loading-row"><span className="spinner" />检索知识图谱、推理中…</span></div>
                 </div>
               </div>
             )}

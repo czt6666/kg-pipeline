@@ -1,4 +1,4 @@
-"""Stage 0: convert data/raw/docred/dev.json into data/work/docred/dev/docs.jsonl.
+"""Stage 0: convert data/raw/docred/dev.json into data/pipeline/docred/splits/dev/docs.jsonl.
 
 Text is the raw space-joined DocRED tokenization (same convention as
 build_docred_fewshot.py), so mention strings extracted by the LLM remain exact
@@ -10,7 +10,7 @@ import argparse
 import json
 from pathlib import Path
 
-from common import REPO_ROOT, count_tokens, load_config, work_dir, write_jsonl
+from core.common import REPO_ROOT, count_tokens, load_config, work_dir, write_jsonl
 
 RAW_PATH = REPO_ROOT / "data/raw/docred/dev.json"
 

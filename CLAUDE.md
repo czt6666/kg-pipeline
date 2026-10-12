@@ -2,31 +2,31 @@
 
 ## 硬性规则
 
-- `prompts/{dataset}_prompt_template.txt` 是生成物，不手改——改 `schema/{dataset}_schema.yaml`
-  或 `{dataset}_fewshot.json` 后跑 `src/build_{dataset}_prompt.py` 重新渲染，保证同一 schema
+- `resources/prompts/<dataset>/<version>/template.txt` 是生成物，不手改——改 `resources/schemas/{dataset}.yaml`
+  或对应 few-shot 文件后跑 `src/build_{dataset}_prompt.py` 重新渲染，保证同一 schema
   永远生成同一段 prompt（网关 prefix cache 依赖这点）。
 - 新数据集 / schema 改动后，`stage1_extract` 大批量跑之前先把渲染好的 prompt 拿给用户确认。
 - 批量 OCR 不用 LLM 视觉模型，扫描版 PDF 走 `src/stage0_ocr.py`（本地 macOS Vision 框架）。
-- `data/raw/` 只读。它和 `data/cache/` 已 gitignore，`data/work/` 没有——`git add` 前想清楚要不要
+- `data/raw/` 只读。它和 `data/cache/` 已 gitignore，`data/pipeline/` 没有——`git add` 前想清楚要不要
   把 `llm_cache/`、`*.faiss` 这类大文件带进仓库。
 
 ## 重要目录讲解
 
 ```
 data/raw/{dataset}/               原始语料，只读
-schema/{dataset}_schema.yaml      实体/关系定义唯一来源（entity_types 支持纯字符串或
+resources/schemas/{dataset}.yaml      实体/关系定义唯一来源（entity_types 支持纯字符串或
                                    {name, prompt_line} 对象两种格式，见 stage2_validate.load_schema）
-prompts/{dataset}_fewshot.json    few-shot 样例，人工撰写
-prompts/{dataset}_prompt_template.txt  生成物
+resources/prompts/<dataset>/<version>/fewshot.json    few-shot 样例，人工撰写
+resources/prompts/<dataset>/<version>/template.txt  生成物
 src/build_{dataset}_prompt.py     schema+fewshot → prompt_template.txt 渲染脚本
 src/stage0~stage7                 流水线各阶段；除 stage0 OCR、stage1 抽取、stage6 embedding
                                    外均不触网，可反复重跑
-data/work/{dataset}/{split}/      单个 split 的中间产物
-data/work/{dataset}/merged*/      stage7 跨文档合并图，可视化"完整知识图谱"读这里；一个
+data/pipeline/{dataset}/splits/{split}/      单个 split 的中间产物
+data/graph/{dataset}/merged*/      stage7 跨文档合并图，可视化"完整知识图谱"读这里；一个
                                    dataset 下可以有多个独立合并图（目录名任意，默认
                                    `merged`），如 TCM 的 merged_neike/merged_jichu/
                                    merged_zhenduan——每本书各自合并一张图，互不跨书合并
-web/ (Vite+React, src/serve.py 提供 API)  按文件契约动态发现数据集，新数据集产出同名
+web/ (Vite+React，services/backend_server.py 提供页面+pipeline API，/api/kg/* 由同一服务转发到图谱路由)  按文件契约动态发现数据集，新数据集产出同名
                                    文件即自动出现，无需改代码；进入合并视图需另跑
                                    stage7_merge.py。前端改完要 `npm run build`（在 web/
                                    下）产出 web/dist/，serve.py 只读 dist/，不读 src/
@@ -112,34 +112,34 @@ pretty-print），方便逐行对照，不占篇幅。
 ```bash
 .venv/bin/python scripts/build_review_prompts.py \
   --split neike_trial_v2_pro --n 41 \
-  --prompt-template prompts/tcm_prompt_template_v2_pro.txt \
+  --prompt-template resources/prompts/tcm/v2_pro/template.txt \
   --out docs/tcm_extraction_review_prompts_v2_pro.md
 ```
 
-- `--split` 决定读哪个 `data/work/TCM/{split}/{docs,extraction_valid}.jsonl`；`--n` 控制取前几篇
+- `--split` 决定读哪个 `data/pipeline/TCM/splits/{split}/{docs,extraction_valid}.jsonl`；`--n` 控制取前几篇
   （默认 10，全量审阅传实际文档数）。
 - `--prompt-template`：传了就直接摘取该 prompt 模板文件里「文本：\n{TEXT}」占位符之前的全部内容
   （含段落分类表、实体/关系定义、输出规则、few-shot 示例）作为规则区，与实际产出这批抽取结果的
   prompt 逐字一致——**换了 prompt 版本（如 v2/v2_pro）必须带这个参数**，否则会退回到用
-  `schema/tcm_schema.yaml` 动态渲染的规则区，可能和实际用的 prompt 对不上。不传时才用于最初的
-  base prompt（`prompts/tcm_prompt_template.txt`）审阅场景。
+  `resources/schemas/tcm.yaml` 动态渲染的规则区，可能和实际用的 prompt 对不上。不传时才用于最初的
+  base prompt（`resources/prompts/tcm/v1/template.txt`）审阅场景。
 - 输出文件名按 split 区分（`tcm_extraction_review_prompts{_v2,_v2_pro,...}.md`），不要互相覆盖。
 
 ## 部署（czt666.cn/kg/）
 
 ```bash
 ./deploy.sh              # 构建前端 + 同步代码，重启服务（日常改代码/前端后用这个）
-./deploy.sh --data       # 追加同步 data/work/（跑完新 pipeline 阶段 / 重新 merge 后才需要，~200MB+，较慢）
+./deploy.sh --data       # 追加同步 data/pipeline/（跑完新 pipeline 阶段 / 重新 merge 后才需要，~200MB+，较慢）
 ./deploy.sh --env        # 追加同步 .env（换了 API key 才需要）
 ```
 
 `deploy.sh` 做的事：本地 `npm run build`（服务器只有 1 核/964MB，跑不动 `npm install`/`vite build`）
-→ rsync 同步 `src/schema/prompts/config.yaml` → tar+ssh 同步 `web/dist/`（本机 openrsync 和服务器
-GNU rsync 在大文件上有协议兼容 bug，踩过坑，别改回 rsync/scp）→ 按 flag 同步 `data/work/`/`.env`
-→ `systemctl restart kg-pipeline.service` → 重试 curl 验证 `/kg/` 和 `/api/merged` 是否 200。
+→ rsync 同步 `apps|assistant|core|graph|prompting|resources|services|src|config.yaml` → tar+ssh 同步 `web/dist/`（本机 openrsync 和服务器
+GNU rsync 在大文件上有协议兼容 bug，踩过坑，别改回 rsync/scp）→ 按 flag 同步 `data/pipeline/`/`.env`
+→ `systemctl restart kg-pipeline.service` → 重试 curl 验证 `/kg/` 和 `/api/kg/merged` 是否 200。
 
 服务器目录（`root@39.106.77.104:/www/wwwroot/kg-pipeline/`）结构和本地仓库一致：
-`src/ schema/ prompts/ config.yaml web/dist/ data/work/ .venv/(py3.9) .env`。serve.py 只读
+`src/ core/ assistant/ graph/ prompting/ services/ resources/ config.yaml web/dist/ data/ .venv/ .env`。serve.py 只读
 `web/dist/`，不读 `web/src/`，所以前端改动不 build 不会生效。
 
 进程：`kg-pipeline.service`（systemd，`ExecStart=.venv/bin/python src/serve.py --port 8787`，
@@ -152,7 +152,7 @@ firewalld 没放行，外网连不到，必须走 nginx）。
 ```bash
 ssh root@39.106.77.104                                    # 服务器（本机 ~/.ssh/config 已配好别名）
 ssh root@39.106.77.104 journalctl -u kg-pipeline.service -n 50 --no-pager   # 后端报错看这个
-curl -s https://czt666.cn/api/merged | python3 -m json.tool   # 各数据集当前 splits/节点边数，最快的健康检查
+curl -s https://czt666.cn/api/kg/merged | python3 -m json.tool   # 各数据集当前 splits/节点边数，最快的健康检查
 ```
 
 - 前端页面：https://czt666.cn/kg/#/graph

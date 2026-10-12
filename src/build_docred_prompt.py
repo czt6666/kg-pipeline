@@ -1,4 +1,4 @@
-"""Stage 0: render prompts/docred_prompt_template.txt from schema + fewshot (DESIGN.md 2.3).
+"""Stage 0: render the DocRED extraction prompt template from schema + fewshot (DESIGN.md 2.3).
 
 The relation list and few-shot examples are baked into the template file as static text
 (not re-rendered per request) so that the prompt prefix is byte-identical across calls,
@@ -8,11 +8,12 @@ The only remaining runtime placeholder is {{TEXT}}.
 Shared load/write/report plumbing lives in prompt_builder.PromptBuilder; this module
 only supplies the DocRED-specific `render()`.
 """
+import argparse
 import json
 from collections import defaultdict
 from pathlib import Path
 
-from prompt_builder import PromptBuilder
+from prompting.builder import PromptBuilder
 
 
 def render_relation_list(relations):
@@ -37,9 +38,9 @@ def render_fewshot(examples):
 
 
 class DocREDPromptBuilder(PromptBuilder):
-    schema_path = Path("schema/docred_schema.yaml")
-    fewshot_path = Path("prompts/docred_fewshot.json")
-    out_path = Path("prompts/docred_prompt_template.txt")
+    schema_path = Path("resources/schemas/docred.yaml")
+    fewshot_path = Path("resources/prompts/docred/v1/fewshot.json")
+    out_path = Path("resources/prompts/docred/v1/template.txt")
 
     def render(self, schema, fewshot):
         entity_types = ", ".join(schema["entity_types"])
@@ -68,5 +69,15 @@ class DocREDPromptBuilder(PromptBuilder):
 """
 
 
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--version", default="v1")
+    args = ap.parse_args()
+    DocREDPromptBuilder(
+        fewshot_path=Path(f"resources/prompts/docred/{args.version}/fewshot.json"),
+        out_path=Path(f"resources/prompts/docred/{args.version}/template.txt"),
+    ).build()
+
+
 if __name__ == "__main__":
-    DocREDPromptBuilder().build()
+    main()

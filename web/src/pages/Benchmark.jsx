@@ -177,7 +177,7 @@ export function Benchmark() {
           </div>
         </div>
       </div>
-      {showPrompt && <PromptModal name="tcm_prompt_template_v2_pro.txt" onClose={() => setShowPrompt(false)} />}
+      {showPrompt && <PromptModal name="extraction/tcm:template" onClose={() => setShowPrompt(false)} />}
     </>
   );
 }
