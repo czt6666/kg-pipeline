@@ -25,7 +25,7 @@ def summarize_facts(client: LLMClient, seed: dict, facts: list[dict]) -> str | N
     facts_block = "\n".join(f"- {f['sentence']}" for f in facts)
     prompt = PROMPT_TEMPLATE.format(name=seed["name"], type=seed["type"], facts_block=facts_block)
     try:
-        record = client.chat(prompt, temperature=0.3, max_tokens=768)
+        record = client.chat(prompt, temperature=0.3, max_tokens=4096)
     except LLMError:
         return None
     text = (record.get("response_raw") or "").strip()

@@ -49,6 +49,34 @@ def test_chat_uses_messages_endpoint_without_thinking_and_caches(gateway_env, mo
     assert len(calls) == 1
 
 
+def test_chat_does_not_cache_empty_answer(gateway_env, monkeypatch, tmp_path):
+    calls = []
+
+    class Response:
+        status_code = 200
+
+        def json(self):
+            return {
+                "content": [{"type": "thinking", "thinking": "嗯……"}],
+                "stop_reason": "max_tokens",
+                "usage": {"input_tokens": 5, "output_tokens": 32},
+            }
+
+    def fake_post(url, headers, json, timeout):
+        calls.append(url)
+        return Response()
+
+    monkeypatch.setattr("core.llm.requests.post", fake_post)
+    client = LLMClient(tmp_path)
+    result = client.chat("你好", temperature=0, max_tokens=32)
+
+    assert result["response_raw"] == ""
+    assert result["finish_reason"] == "max_tokens"
+    assert list(tmp_path.glob("*.json")) == []
+    client.chat("你好", temperature=0, max_tokens=32)
+    assert len(calls) == 2
+
+
 def test_agent_build_uses_gateway_for_decisions_answers_and_retrieval(gateway_env):
     from assistant.loop import TCMAgent
 

@@ -4,13 +4,11 @@ Chat uses the Anthropic-style /v1/messages endpoint with extended thinking disab
 embeddings use /v1/embeddings.
 
 deepseek-v4-pro on this gateway has a hard 8192-token *total* output cap (thinking +
-content share the same budget) via the OpenAI-compatible /v1/chat/completions endpoint,
-and for our extraction prompts it reliably spends the entire budget on reasoning_content,
-leaving zero room for the actual JSON answer (finish_reason=length, content=""). Passing
-`"thinking": {"type": "disabled"}` on /v1/messages removes the reasoning pass entirely,
-so max_tokens covers only the JSON answer -- verified empirically (see session notes) to
-finish in single-digit seconds with well-formed output. Gateway chat therefore uses
-/v1/messages.
+content share the same budget). We still send `"thinking": {"type": "disabled"}` on
+/v1/messages, but as of 2026-10 the gateway ignores it: every response carries a thinking
+block, and thinking eats into max_tokens before any text is written. Callers must
+therefore budget for thinking + answer (the agent and summary calls use 4096); a small
+budget yields finish_reason=max_tokens with truncated or empty text.
 
 Cache key = sha256(model + prompt + temperature + max_tokens). A hit skips the network
 call entirely (DESIGN.md 2.5). Retries only apply to the network/HTTP layer, not to
@@ -146,7 +144,10 @@ class LLMClient:
             "latency_ms": latency_ms,
             "created_at": datetime.now(timezone.utc).isoformat(),
         }
-        cache_path.write_text(json.dumps(record, ensure_ascii=False, indent=2))
+        # An empty answer (budget spent on thinking) is never worth replaying: caching it
+        # would make every later identical call return the same empty result.
+        if response_text.strip():
+            cache_path.write_text(json.dumps(record, ensure_ascii=False, indent=2))
         return record
 
     def embed(self, texts: list[str]) -> list[list[float]]:
