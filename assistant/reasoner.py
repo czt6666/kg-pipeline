@@ -14,7 +14,7 @@ from __future__ import annotations
 import json
 import re
 
-from core.llm import LLMClient
+from core.llm import GATEWAY_MAX_OUTPUT_TOKENS, LLMClient
 
 
 class AgentError(RuntimeError):
@@ -57,7 +57,7 @@ class LLMReasoner:
         self.answer_client = answer_client or client
 
     def think(self, prompt: str, tag: str = "", temperature: float = 0.0,
-              max_tokens: int = 1024) -> dict:
+              max_tokens: int = GATEWAY_MAX_OUTPUT_TOKENS) -> dict:
         raw = self.client.chat(prompt, temperature=temperature, max_tokens=max_tokens)
         text = raw.get("response_raw") or ""
         try:
@@ -68,7 +68,7 @@ class LLMReasoner:
             return extract_json(raw2.get("response_raw") or "")
 
     def write(self, prompt: str, tag: str = "", temperature: float = 0.3,
-              max_tokens: int = 1200) -> str:
+              max_tokens: int = GATEWAY_MAX_OUTPUT_TOKENS) -> str:
         raw = self.answer_client.chat(prompt, temperature=temperature, max_tokens=max_tokens)
         return (raw.get("response_raw") or "").strip()
 

@@ -133,32 +133,30 @@ pretty-print），方便逐行对照，不占篇幅。
 ./deploy.sh --env        # 追加同步 .env（换了 API key 才需要）
 ```
 
-`deploy.sh` 做的事：本地 `npm run build`（服务器只有 1 核/964MB，跑不动 `npm install`/`vite build`）
+`deploy.sh` 做的事：本地 `npm run build`（服务器上不跑 `npm install`/`vite build`）
 → rsync 同步 `apps|assistant|core|graph|prompting|resources|services|src|config.yaml` → tar+ssh 同步 `web/dist/`（本机 openrsync 和服务器
 GNU rsync 在大文件上有协议兼容 bug，踩过坑，别改回 rsync/scp）→ 按 flag 同步 `data/pipeline/`/`.env`
-→ `systemctl restart kg-pipeline.service` → 重试 curl 验证 `/kg/` 和 `/api/kg/merged` 是否 200。
+→ 新建 `releases/vN` 并切 `current` 软链 → `systemctl restart czt666@kg-pipeline` → 重试 curl 验证 `/kg/` 和 `/api/kg/merged` 是否 200。
 
-服务器目录（`root@39.106.77.104:/www/wwwroot/kg-pipeline/`）结构和本地仓库一致：
+服务器 `root@8.130.54.51`，目录 `/srv/czt666/apps/kg-pipeline/`：`releases/vN/` 是每次部署的不可变版本，
+`current` 软链指向当前版本，`shared/data/` 是持久化数据（各 release 的 `data` 软链到这里）。每个 release 结构和本地仓库一致：
 `src/ core/ assistant/ graph/ prompting/ services/ resources/ config.yaml web/dist/ data/ .venv/ .env`。serve.py 只读
 `web/dist/`，不读 `web/src/`，所以前端改动不 build 不会生效。
 
-进程：`kg-pipeline.service`（systemd，`ExecStart=.venv/bin/python src/serve.py --port 8787`，
-`Restart=on-failure`）。nginx（`/www/server/panel/vhost/nginx/czt666.cn.conf`）把
-`location ^~ /kg/` 和 `location ^~ /api/` 都反代到 `127.0.0.1:8787`（8787 只监听 loopback，
-firewalld 没放行，外网连不到，必须走 nginx）。
+进程：`czt666@kg-pipeline`（systemd 模板单元，`/srv/czt666/apps/` 下所有应用共用），从 `current`
+指向的 release 目录里执行 `run.sh`（即仓库的 `deploy/run.sh`），端口和启动命令来自
+`shared/app.env` 的 `PORT`/`START`。
 
 调试用：
 
 ```bash
-ssh root@39.106.77.104                                    # 服务器（本机 ~/.ssh/config 已配好别名）
-ssh root@39.106.77.104 journalctl -u kg-pipeline.service -n 50 --no-pager   # 后端报错看这个
+ssh root@8.130.54.51                                     # 服务器
+ssh root@8.130.54.51 journalctl -u czt666@kg-pipeline -n 50 --no-pager   # 后端报错看这个
+# 回滚：ssh root@8.130.54.51 'ln -sfn releases/v<N> /srv/czt666/apps/kg-pipeline/current && systemctl restart czt666@kg-pipeline'
 curl -s https://czt666.cn/api/kg/merged | python3 -m json.tool   # 各数据集当前 splits/节点边数，最快的健康检查
 ```
 
 - 前端页面：https://czt666.cn/kg/#/graph
-- 该服务器同时挂了别的项目（BT 面板管理），只有 1 核/964MB，非常吃紧——排查变慢/502 先看
-  `top`/`free -h`，大概率是别的进程（曾经是一个崩溃重启循环的废弃 Java 项目）在抢资源，不一定是
-  kg-pipeline 自己的问题。
 
 ## Schema 设计
 

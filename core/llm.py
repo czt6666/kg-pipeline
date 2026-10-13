@@ -7,8 +7,9 @@ deepseek-v4-pro on this gateway has a hard 8192-token *total* output cap (thinki
 content share the same budget). We still send `"thinking": {"type": "disabled"}` on
 /v1/messages, but as of 2026-10 the gateway ignores it: every response carries a thinking
 block, and thinking eats into max_tokens before any text is written. Callers must
-therefore budget for thinking + answer (the agent and summary calls use 4096); a small
-budget yields finish_reason=max_tokens with truncated or empty text.
+therefore budget for thinking + answer (the agent and summary calls use the full
+GATEWAY_MAX_OUTPUT_TOKENS); a small budget yields finish_reason=max_tokens with truncated
+or empty text.
 
 Cache key = sha256(model + prompt + temperature + max_tokens). A hit skips the network
 call entirely (DESIGN.md 2.5). Retries only apply to the network/HTTP layer, not to
@@ -27,6 +28,11 @@ import requests
 from .common import count_tokens, load_config, load_env
 
 load_env()
+
+# The gateway's hard ceiling on output tokens (thinking + text combined). Interactive
+# callers (QA agent, entity summaries) use it instead of a tighter per-call budget, since
+# the gateway always thinks first and any smaller cap risks a truncated or empty answer.
+GATEWAY_MAX_OUTPUT_TOKENS = 8192
 
 
 class LLMError(RuntimeError):
