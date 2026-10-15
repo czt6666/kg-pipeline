@@ -80,13 +80,15 @@ class LLMClient:
     def _cache_path(self, key: str) -> Path:
         return self.cache_dir / f"{key}.json"
 
-    def _post_with_retry(self, url: str, payload: dict, headers: dict = None) -> requests.Response:
+    def _post_with_retry(self, url: str, payload: dict, headers: dict = None,
+                         stream: bool = False) -> requests.Response:
         headers = headers or self._headers()
         delay = self.retry_base_delay_s
         last_exc = None
         for attempt in range(self.max_retries + 1):
             try:
-                resp = requests.post(url, headers=headers, json=payload, timeout=self.timeout_s)
+                resp = requests.post(url, headers=headers, json=payload, timeout=self.timeout_s,
+                                     stream=stream)
             except requests.RequestException as e:
                 last_exc = e
             else:
@@ -106,7 +108,7 @@ class LLMClient:
         raise LLMError(f"request failed after {self.max_retries + 1} attempts: {last_exc}")
 
     def chat(self, prompt: str, temperature: float = None, max_tokens: int = None,
-             cache_salt: str = None) -> dict:
+             cache_salt: str = None, on_text=None) -> dict:
         """Returns the cache record dict (see llm_cache/{sha256}.json schema in DESIGN.md 6).
 
         Calls /v1/messages with thinking disabled (see module docstring).
@@ -115,13 +117,20 @@ class LLMClient:
         multi-round sampling (same prompt/temperature/max_tokens, called N times to get
         N independent completions) can pass cache_salt=f"round{i}" to force N separate
         network calls instead of N cache hits on the same entry.
+
+        on_text, if given, is called with each chunk of answer text as it arrives (the
+        request is made with stream=true); on a cache hit it gets the whole text at once.
+        Streaming doesn't change the cache key or the record format.
         """
         temperature = self.temperature if temperature is None else temperature
         max_tokens = self.max_output_tokens if max_tokens is None else max_tokens
         key = self._cache_key(prompt, temperature, max_tokens, cache_salt)
         cache_path = self._cache_path(key)
         if cache_path.exists():
-            return json.loads(cache_path.read_text())
+            record = json.loads(cache_path.read_text())
+            if on_text and record.get("response_raw"):
+                on_text(record["response_raw"])
+            return record
 
         payload = {"model": self.model,
                    "messages": [{"role": "user", "content": prompt}],
@@ -129,14 +138,21 @@ class LLMClient:
                    "max_tokens": max_tokens,
                    "thinking": {"type": "disabled"}}
         t0 = time.time()
-        resp = self._post_with_retry(self.base_url + "v1/messages", payload,
-                                     headers=self._messages_headers())
+        if on_text:
+            payload["stream"] = True
+            resp = self._post_with_retry(self.base_url + "v1/messages", payload,
+                                         headers=self._messages_headers(), stream=True)
+            response_text, thinking, finish_reason, usage = _read_message_stream(resp, on_text)
+        else:
+            resp = self._post_with_retry(self.base_url + "v1/messages", payload,
+                                         headers=self._messages_headers())
+            data = resp.json()
+            blocks = data.get("content", [])
+            response_text = "".join(b.get("text", "") for b in blocks if b.get("type") == "text")
+            thinking = "".join(b.get("thinking", "") for b in blocks if b.get("type") == "thinking")
+            finish_reason = data.get("stop_reason")
+            usage = data.get("usage")
         latency_ms = int((time.time() - t0) * 1000)
-        data = resp.json()
-        blocks = data.get("content", [])
-        response_text = "".join(b.get("text", "") for b in blocks if b.get("type") == "text")
-        thinking = "".join(b.get("thinking", "") for b in blocks if b.get("type") == "thinking")
-        finish_reason = data.get("stop_reason")
         record = {
             "cache_key": key,
             "model": self.model,
@@ -146,7 +162,7 @@ class LLMClient:
             "response_raw": response_text,
             "reasoning_content": thinking or None,
             "finish_reason": finish_reason,
-            "usage": data.get("usage"),
+            "usage": usage,
             "latency_ms": latency_ms,
             "created_at": datetime.now(timezone.utc).isoformat(),
         }
@@ -162,3 +178,41 @@ class LLMClient:
         data = resp.json()
         ordered = sorted(data["data"], key=lambda d: d["index"])
         return [d["embedding"] for d in ordered]
+
+
+def _read_message_stream(resp: requests.Response, on_text) -> tuple[str, str, str, dict]:
+    """Consumes an Anthropic-style /v1/messages SSE stream, forwarding each text delta to
+    on_text. Returns (text, thinking, stop_reason, usage)."""
+    resp.encoding = "utf-8"
+    text, thinking = [], []
+    stop_reason, usage = None, {}
+    try:
+        for line in resp.iter_lines(decode_unicode=True):
+            if not line or not line.startswith("data:"):
+                continue
+            raw = line[5:].strip()
+            if not raw or raw == "[DONE]":
+                continue
+            ev = json.loads(raw)
+            etype = ev.get("type")
+            if etype == "message_start":
+                usage.update((ev.get("message") or {}).get("usage") or {})
+            elif etype == "content_block_delta":
+                delta = ev.get("delta") or {}
+                if delta.get("type") == "text_delta":
+                    chunk = delta.get("text", "")
+                    text.append(chunk)
+                    if chunk:
+                        on_text(chunk)
+                elif delta.get("type") == "thinking_delta":
+                    thinking.append(delta.get("thinking", ""))
+            elif etype == "message_delta":
+                stop_reason = (ev.get("delta") or {}).get("stop_reason") or stop_reason
+                usage.update(ev.get("usage") or {})
+            elif etype == "error":
+                raise LLMError(f"stream error: {ev.get('error')}")
+    except (requests.RequestException, ValueError) as e:
+        raise LLMError(f"stream interrupted: {e}") from e
+    finally:
+        resp.close()
+    return "".join(text), "".join(thinking), stop_reason, usage or None

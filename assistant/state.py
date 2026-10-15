@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Callable
 
 from .actions import Evidence, RetrievalRequest
 
@@ -66,6 +66,10 @@ class AgentState:
     trace: list[TraceStep] = field(default_factory=list)
     _step: int = 0
 
+    # Optional progress sink for streaming a turn to the client: called with
+    # (event_type, payload) for every trace step ("step") and answer text chunk ("delta").
+    on_event: Callable[[str, dict], None] | None = field(default=None, repr=False)
+
     # ---- conversation helpers ----
 
     def add_user(self, text: str):
@@ -116,7 +120,19 @@ class AgentState:
         self._step += 1
         s = TraceStep(step=self._step, stage=stage, output=output, meta=meta)
         self.trace.append(s)
+        self.emit("step", s.to_dict())
         return s
+
+    def emit(self, event: str, payload: dict):
+        if self.on_event:
+            self.on_event(event, payload)
+
+    def text_sink(self):
+        """on_text callback for reasoner.write that forwards answer chunks as "delta"
+        events, or None when nobody is listening (so the LLM call stays non-streaming)."""
+        if not self.on_event:
+            return None
+        return lambda chunk: self.emit("delta", {"text": chunk})
 
     def to_dict(self) -> dict:
         return {

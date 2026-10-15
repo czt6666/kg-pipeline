@@ -10,7 +10,7 @@ from urllib.parse import parse_qs, unquote, urlparse
 from core.common import PIPELINE_ROOT, REPO_ROOT, read_jsonl, work_dir
 from prompting import PromptStore
 from .http_utils import ApiResult, JsonHandler
-from .kg_server import agent_chat, get_doc as get_graph_doc, get_graph, get_node, list_graphs, retrieval_expand, retrieval_search, retrieval_summary
+from .kg_server import agent_chat, stream_agent_chat, get_doc as get_graph_doc, get_graph, get_node, list_graphs, retrieval_expand, retrieval_search, retrieval_summary
 
 DIST_DIR = REPO_ROOT / "web" / "dist"
 EVAL_DIR = REPO_ROOT / "eval"
@@ -190,6 +190,8 @@ class BackendHandler(JsonHandler):
             return self.send_api(ApiResult(400, {"error": "invalid JSON body"}))
         if parsed.path == "/api/kg/agent/chat":
             return self.send_api(agent_chat(body))
+        if parsed.path == "/api/kg/agent/chat/stream":
+            return stream_agent_chat(self, body)
         return self.send_api(ApiResult(404, {"error": "not found"}))
 
     def do_GET(self):

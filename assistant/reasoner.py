@@ -68,8 +68,9 @@ class LLMReasoner:
             return extract_json(raw2.get("response_raw") or "")
 
     def write(self, prompt: str, tag: str = "", temperature: float = 0.3,
-              max_tokens: int = GATEWAY_MAX_OUTPUT_TOKENS) -> str:
-        raw = self.answer_client.chat(prompt, temperature=temperature, max_tokens=max_tokens)
+              max_tokens: int = GATEWAY_MAX_OUTPUT_TOKENS, on_text=None) -> str:
+        raw = self.answer_client.chat(prompt, temperature=temperature, max_tokens=max_tokens,
+                                      on_text=on_text)
         return (raw.get("response_raw") or "").strip()
 
 
@@ -93,6 +94,9 @@ class ScriptedReasoner:
         self.calls.append((tag, prompt))
         return self._pop(tag)
 
-    def write(self, prompt: str, tag: str = "", **_) -> str:
+    def write(self, prompt: str, tag: str = "", on_text=None, **_) -> str:
         self.calls.append((tag, prompt))
-        return self._pop(tag)
+        text = self._pop(tag)
+        if on_text:
+            on_text(text)
+        return text

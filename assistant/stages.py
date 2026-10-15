@@ -91,13 +91,13 @@ def run_retrieval(state: AgentState, adapter: RetrievalAdapter, raw_queries: lis
 
 def compose_answer(state: AgentState, reasoner) -> str:
     ms = timed()
-    text = reasoner.write(prompts.answer_prompt(state), tag="answer")
+    text = reasoner.write(prompts.answer_prompt(state), tag="answer", on_text=state.text_sink())
     state.log("answer", {"candidates": state.candidates}, latency_ms=ms())
     return text
 
 
 def compose_escalate(state: AgentState, reasoner) -> str:
     ms = timed()
-    text = reasoner.write(prompts.escalate_prompt(state), tag="escalate")
+    text = reasoner.write(prompts.escalate_prompt(state), tag="escalate", on_text=state.text_sink())
     state.log("escalate", {}, latency_ms=ms())
     return text
