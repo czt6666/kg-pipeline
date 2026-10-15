@@ -189,7 +189,7 @@ class BackendHandler(JsonHandler):
         except json.JSONDecodeError:
             return self.send_api(ApiResult(400, {"error": "invalid JSON body"}))
         if parsed.path == "/api/kg/agent/chat":
-            return self.send_api(agent_chat(body))
+            return self.send_api_with_heartbeat(lambda: agent_chat(body))
         return self.send_api(ApiResult(404, {"error": "not found"}))
 
     def do_GET(self):
