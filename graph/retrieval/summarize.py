@@ -8,7 +8,7 @@ collides with the main model's cache entries even though it shares llm_cache/).
 """
 from __future__ import annotations
 
-from core.llm import LLMClient, LLMError
+from core.llm import GATEWAY_MAX_OUTPUT_TOKENS, LLMClient, LLMError
 from prompting import PromptStore
 
 SUMMARY_MODEL = "deepseek-v4-flash"
@@ -25,7 +25,7 @@ def summarize_facts(client: LLMClient, seed: dict, facts: list[dict]) -> str | N
     facts_block = "\n".join(f"- {f['sentence']}" for f in facts)
     prompt = PROMPT_TEMPLATE.format(name=seed["name"], type=seed["type"], facts_block=facts_block)
     try:
-        record = client.chat(prompt, temperature=0.3, max_tokens=768)
+        record = client.chat(prompt, temperature=0.3, max_tokens=GATEWAY_MAX_OUTPUT_TOKENS)
     except LLMError:
         return None
     text = (record.get("response_raw") or "").strip()

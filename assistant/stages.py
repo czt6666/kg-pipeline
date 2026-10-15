@@ -34,7 +34,8 @@ def decide(state: AgentState, reasoner, schema: SchemaSpec) -> dict:
     """The controller: one LLM call that returns the next action. Everything downstream is
     deterministic, so this is the only place per step the agent 'thinks'."""
     ms = timed()
-    out = reasoner.think(prompts.controller_prompt(state, schema), tag="controller", max_tokens=900)
+    out = reasoner.think(prompts.controller_prompt(state, schema), tag="controller",
+                         on_thinking=state.thinking_sink("controller"))
     action = out.get("action")
     if action not in _VALID_ACTIONS:
         # If the model returned something odd, fall back to retrieving if we never have, else
@@ -91,13 +92,15 @@ def run_retrieval(state: AgentState, adapter: RetrievalAdapter, raw_queries: lis
 
 def compose_answer(state: AgentState, reasoner) -> str:
     ms = timed()
-    text = reasoner.write(prompts.answer_prompt(state), tag="answer", max_tokens=1200)
+    text = reasoner.write(prompts.answer_prompt(state), tag="answer", on_text=state.text_sink(),
+                          on_thinking=state.thinking_sink("answer"))
     state.log("answer", {"candidates": state.candidates}, latency_ms=ms())
     return text
 
 
 def compose_escalate(state: AgentState, reasoner) -> str:
     ms = timed()
-    text = reasoner.write(prompts.escalate_prompt(state), tag="escalate", max_tokens=512)
+    text = reasoner.write(prompts.escalate_prompt(state), tag="escalate", on_text=state.text_sink(),
+                          on_thinking=state.thinking_sink("escalate"))
     state.log("escalate", {}, latency_ms=ms())
     return text

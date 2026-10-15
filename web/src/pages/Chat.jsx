@@ -1,14 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { TopBar } from "../components/TopBar.jsx";
 import { Markdown } from "../components/Markdown.jsx";
-import { getJSON, postJSON } from "../utils/api.js";
+import { getJSON, postSSE } from "../utils/api.js";
 import { mergeKey, mergeLabel } from "../utils/merged.js";
 
 /* 问答：TCM 智慧诊疗 Agent Loop 的对话界面。前端无状态——每轮把完整消息历史 POST 给
-   /api/kg/agent/chat，KG 服务跑一轮单控制器 ReAct 循环（控制器每步决定 检索/追问/回答/转诊，
-   检索结果喂回继续，可多轮下钻）返回 {action, reply, candidates, evidence, trace}。后端现在
-   始终带 trace（不再需要 debug 开关才请求），前端把每一步渲染成一条 markdown 格式的推理
-   时间线，默认展开——"检索过程对用户可见"是硬要求，不是可选的调试功能。 */
+   /api/kg/agent/chat/stream，KG 服务跑一轮单控制器 ReAct 循环（控制器每步决定 检索/追问/回答/转诊，
+   检索结果喂回继续，可多轮下钻）。一轮可能要好几分钟，所以走 SSE 流式返回：每完成一步推送一个
+   step 事件（推理时间线实时增长），模型每次调用的思考过程按 thinking 事件实时显示在气泡里，
+   回答正文按 delta 事件边生成边显示，最后 done 事件带完整的
+   {action, reply, candidates, evidence, trace}。推理时间线默认展开——"检索过程对用户可见"是
+   硬要求，不是可选的调试功能。 */
 
 const ACTION_META = {
   ANSWER:   { label: "回答",   cls: "act-answer" },
@@ -88,6 +90,19 @@ function stepMarkdown(step) {
   }
 }
 
+// 流式进行中、正文还没开始时，气泡里显示"现在在做哪一步"；模型正在思考时下面再实时显示思考内容。
+const THINKING_LABEL = { controller: "决定下一步", answer: "组织回答", escalate: "评估风险" };
+
+function streamHint(trace, thinking) {
+  if (thinking) return `思考中：${THINKING_LABEL[thinking.stage] || thinking.stage}…`;
+  const last = trace?.[trace.length - 1];
+  if (!last) return "理解问题中…";
+  if (last.stage === "controller" && last.output?.action === "retrieve") return "检索知识图谱中…";
+  if (last.stage === "retrieval_result" || last.stage === "retrieval_skipped") return "根据检索结果推理中…";
+  if (last.stage === "controller" && last.output?.action === "answer") return "组织回答中…";
+  return "推理中…";
+}
+
 // 推理时间线：每条助手消息下方常驻展示，默认展开——检索/决策过程对用户可见是硬要求。
 function ReasoningView({ trace }) {
   const [open, setOpen] = useState(true);
@@ -148,20 +163,43 @@ export function Chat() {
     const q = (text ?? input).trim();
     if (!q || busy || !selected) return;
     const history = messages.map(m => ({ role: m.role, content: m.content }));
-    const next = [...messages, { role: "user", content: q }];
-    setMessages(next);
+    // 先放一条空的助手消息占位，流式事件陆续往里填 trace 和正文。
+    setMessages([...messages, { role: "user", content: q },
+                 { role: "assistant", content: "", trace: [], streaming: true }]);
     setInput("");
     setBusy(true);
+    const patchLast = (fn) => setMessages(m => [...m.slice(0, -1), fn(m[m.length - 1])]);
+    let finished = false;
     try {
-      const r = await postJSON("/api/kg/agent/chat", {
+      await postSSE("/api/kg/agent/chat/stream", {
         messages: [...history, { role: "user", content: q }],
         dataset: selected.dataset,
         merge: selected.merge,
+      }, (event, data) => {
+        if (event === "step") {
+          // 一步完成，这一步的思考就结束了，清掉实时思考框。
+          patchLast(last => ({ ...last, thinking: null, trace: [...(last.trace || []), data] }));
+        } else if (event === "thinking") {
+          patchLast(last => ({ ...last, thinking: {
+            stage: data.stage,
+            text: (last.thinking?.stage === data.stage ? last.thinking.text : "") + data.text,
+          } }));
+        } else if (event === "delta") {
+          patchLast(last => ({ ...last, thinking: null, content: last.content + data.text }));
+        } else if (event === "done") {
+          finished = true;
+          patchLast(() => ({ role: "assistant", content: data.reply, action: data.action,
+                             candidates: data.candidates, trace: data.trace }));
+        } else if (event === "error") {
+          finished = true;
+          patchLast(last => ({ ...last, streaming: false, error: true,
+                               content: `抱歉，出错了：${data.error}` }));
+        }
       });
-      setMessages(m => [...m, { role: "assistant", content: r.reply, action: r.action,
-                                candidates: r.candidates, trace: r.trace }]);
+      if (!finished) throw new Error("连接中断，回答没有完成");
     } catch (e) {
-      setMessages(m => [...m, { role: "assistant", content: `抱歉，出错了：${e.message}`, error: true }]);
+      patchLast(last => ({ ...last, streaming: false, error: true,
+                           content: `抱歉，出错了：${e.message}` }));
     } finally {
       setBusy(false);
     }
@@ -204,7 +242,12 @@ export function Chat() {
                       <span className={"act-badge " + ACTION_META[m.action].cls}>{ACTION_META[m.action].label}</span>
                     )}
                     <div className={"bubble" + (m.error ? " error" : "")}>
-                      {m.role === "assistant" && !m.error ? <Markdown>{m.content}</Markdown> : m.content}
+                      {m.streaming && !m.content
+                        ? <>
+                            <span className="loading-row"><span className="spinner" />{streamHint(m.trace, m.thinking)}</span>
+                            {m.thinking?.text && <div className="thinking-live">{m.thinking.text.slice(-800)}</div>}
+                          </>
+                        : m.role === "assistant" && !m.error ? <Markdown>{m.content}</Markdown> : m.content}
                     </div>
                     {m.role === "assistant" && m.candidates?.length > 0 && (
                       <div className="cand-row">
@@ -218,14 +261,6 @@ export function Chat() {
                   </div>
                 </div>
               ))
-            )}
-            {busy && (
-              <div className="msg assistant">
-                <div className="msg-avatar">医</div>
-                <div className="msg-main">
-                  <div className="bubble"><span className="loading-row"><span className="spinner" />检索知识图谱、推理中…</span></div>
-                </div>
-              </div>
             )}
           </div>
 

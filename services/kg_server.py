@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import queue
+import threading
 from http.server import ThreadingHTTPServer
 from urllib.parse import parse_qs, unquote, urlparse
 
@@ -138,6 +140,53 @@ def agent_chat(body):
     return ApiResult(200, result.to_dict(include_trace=True))
 
 
+HEARTBEAT_S = 15
+
+
+def stream_agent_chat(handler, body) -> None:
+    """Server-sent-events version of agent_chat. One agent turn can take minutes (several
+    thinking-model calls in a row), longer than nginx waits for a silent upstream, so the
+    turn is streamed: a "step" event per trace step as it happens, "delta" events with the
+    answer text as the model writes it, and a final "done" carrying the same JSON that
+    agent_chat returns (or "error"). Heartbeat comments fill any silence over HEARTBEAT_S."""
+    messages = body.get('messages') or []
+    if not messages or messages[-1].get('role') != 'user':
+        return handler.send_api(ApiResult(400, {"error": "messages must be non-empty and end with a user turn"}))
+    try:
+        agent, state = TCMAgent.build(dataset=body.get('dataset'), merge=body.get('merge'), max_ask_rounds=int(body.get('max_rounds', 3)))
+    except FileNotFoundError as e:
+        return handler.send_api(ApiResult(404, {"error": f"unknown dataset/merge: {e}"}))
+    state.conversation = [{"role": m['role'], "content": m['content']} for m in messages[:-1]]
+
+    events: queue.Queue = queue.Queue()
+    state.on_event = lambda event, payload: events.put((event, payload))
+
+    def run():
+        try:
+            result = agent.run_turn(state, messages[-1]['content'])
+            events.put(("done", result.to_dict(include_trace=True)))
+        except LLMError as e:
+            events.put(("error", {"error": f"llm/retrieval failed: {e}"}))
+        except Exception as e:  # never leave the client waiting on a stream that won't end
+            events.put(("error", {"error": f"{type(e).__name__}: {e}"}))
+
+    threading.Thread(target=run, daemon=True).start()
+    handler.start_event_stream()
+    try:
+        while True:
+            try:
+                event, payload = events.get(timeout=HEARTBEAT_S)
+            except queue.Empty:
+                handler.send_heartbeat()
+                continue
+            handler.send_event(event, payload)
+            if event in ("done", "error"):
+                return
+    except (BrokenPipeError, ConnectionResetError):
+        # Client went away; the agent thread finishes on its own and its events are dropped.
+        return
+
+
 class KgHandler(JsonHandler):
     def do_POST(self):
         parsed = urlparse(self.path)
@@ -149,6 +198,8 @@ class KgHandler(JsonHandler):
             return self.send_bytes(400, b'{"error":"invalid JSON body"}')
         if parsed.path == '/api/kg/agent/chat':
             return self.send_api(agent_chat(body))
+        if parsed.path == '/api/kg/agent/chat/stream':
+            return stream_agent_chat(self, body)
         return self.send_api(ApiResult(404, {"error": "not found"}))
 
     def do_GET(self):
