@@ -57,20 +57,23 @@ class LLMReasoner:
         self.answer_client = answer_client or client
 
     def think(self, prompt: str, tag: str = "", temperature: float = 0.0,
-              max_tokens: int = GATEWAY_MAX_OUTPUT_TOKENS) -> dict:
-        raw = self.client.chat(prompt, temperature=temperature, max_tokens=max_tokens)
+              max_tokens: int = GATEWAY_MAX_OUTPUT_TOKENS, on_thinking=None) -> dict:
+        raw = self.client.chat(prompt, temperature=temperature, max_tokens=max_tokens,
+                               on_thinking=on_thinking)
         text = raw.get("response_raw") or ""
         try:
             return extract_json(text)
         except AgentError:
             strict = prompt + "\n\n重要：只输出一个合法的 JSON 对象，不要任何解释、前后缀或代码块标记。"
-            raw2 = self.client.chat(strict, temperature=temperature, max_tokens=max_tokens)
+            raw2 = self.client.chat(strict, temperature=temperature, max_tokens=max_tokens,
+                                    on_thinking=on_thinking)
             return extract_json(raw2.get("response_raw") or "")
 
     def write(self, prompt: str, tag: str = "", temperature: float = 0.3,
-              max_tokens: int = GATEWAY_MAX_OUTPUT_TOKENS, on_text=None) -> str:
+              max_tokens: int = GATEWAY_MAX_OUTPUT_TOKENS, on_text=None,
+              on_thinking=None) -> str:
         raw = self.answer_client.chat(prompt, temperature=temperature, max_tokens=max_tokens,
-                                      on_text=on_text)
+                                      on_text=on_text, on_thinking=on_thinking)
         return (raw.get("response_raw") or "").strip()
 
 

@@ -67,7 +67,8 @@ class AgentState:
     _step: int = 0
 
     # Optional progress sink for streaming a turn to the client: called with
-    # (event_type, payload) for every trace step ("step") and answer text chunk ("delta").
+    # (event_type, payload) for every trace step ("step"), model thinking chunk
+    # ("thinking", tagged with the stage doing the thinking) and answer text chunk ("delta").
     on_event: Callable[[str, dict], None] | None = field(default=None, repr=False)
 
     # ---- conversation helpers ----
@@ -133,6 +134,13 @@ class AgentState:
         if not self.on_event:
             return None
         return lambda chunk: self.emit("delta", {"text": chunk})
+
+    def thinking_sink(self, stage: str):
+        """on_thinking callback that forwards the model's reasoning as "thinking" events,
+        so the UI isn't blank while a stage thinks for tens of seconds before answering."""
+        if not self.on_event:
+            return None
+        return lambda chunk: self.emit("thinking", {"stage": stage, "text": chunk})
 
     def to_dict(self) -> dict:
         return {

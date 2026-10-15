@@ -108,7 +108,7 @@ class LLMClient:
         raise LLMError(f"request failed after {self.max_retries + 1} attempts: {last_exc}")
 
     def chat(self, prompt: str, temperature: float = None, max_tokens: int = None,
-             cache_salt: str = None, on_text=None) -> dict:
+             cache_salt: str = None, on_text=None, on_thinking=None) -> dict:
         """Returns the cache record dict (see llm_cache/{sha256}.json schema in DESIGN.md 6).
 
         Calls /v1/messages with thinking disabled (see module docstring).
@@ -118,9 +118,9 @@ class LLMClient:
         N independent completions) can pass cache_salt=f"round{i}" to force N separate
         network calls instead of N cache hits on the same entry.
 
-        on_text, if given, is called with each chunk of answer text as it arrives (the
-        request is made with stream=true); on a cache hit it gets the whole text at once.
-        Streaming doesn't change the cache key or the record format.
+        on_text / on_thinking, if given, are called with each chunk of answer text / model
+        thinking as it arrives (the request is made with stream=true); on a cache hit they
+        get the whole text at once. Streaming doesn't change the cache key or record format.
         """
         temperature = self.temperature if temperature is None else temperature
         max_tokens = self.max_output_tokens if max_tokens is None else max_tokens
@@ -128,6 +128,8 @@ class LLMClient:
         cache_path = self._cache_path(key)
         if cache_path.exists():
             record = json.loads(cache_path.read_text())
+            if on_thinking and record.get("reasoning_content"):
+                on_thinking(record["reasoning_content"])
             if on_text and record.get("response_raw"):
                 on_text(record["response_raw"])
             return record
@@ -138,11 +140,11 @@ class LLMClient:
                    "max_tokens": max_tokens,
                    "thinking": {"type": "disabled"}}
         t0 = time.time()
-        if on_text:
+        if on_text or on_thinking:
             payload["stream"] = True
             resp = self._post_with_retry(self.base_url + "v1/messages", payload,
                                          headers=self._messages_headers(), stream=True)
-            response_text, thinking, finish_reason, usage = _read_message_stream(resp, on_text)
+            response_text, thinking, finish_reason, usage = _read_message_stream(resp, on_text, on_thinking)
         else:
             resp = self._post_with_retry(self.base_url + "v1/messages", payload,
                                          headers=self._messages_headers())
@@ -180,9 +182,10 @@ class LLMClient:
         return [d["embedding"] for d in ordered]
 
 
-def _read_message_stream(resp: requests.Response, on_text) -> tuple[str, str, str, dict]:
-    """Consumes an Anthropic-style /v1/messages SSE stream, forwarding each text delta to
-    on_text. Returns (text, thinking, stop_reason, usage)."""
+def _read_message_stream(resp: requests.Response, on_text=None,
+                         on_thinking=None) -> tuple[str, str, str, dict]:
+    """Consumes an Anthropic-style /v1/messages SSE stream, forwarding each text / thinking
+    delta to on_text / on_thinking. Returns (text, thinking, stop_reason, usage)."""
     resp.encoding = "utf-8"
     text, thinking = [], []
     stop_reason, usage = None, {}
@@ -202,10 +205,13 @@ def _read_message_stream(resp: requests.Response, on_text) -> tuple[str, str, st
                 if delta.get("type") == "text_delta":
                     chunk = delta.get("text", "")
                     text.append(chunk)
-                    if chunk:
+                    if chunk and on_text:
                         on_text(chunk)
                 elif delta.get("type") == "thinking_delta":
-                    thinking.append(delta.get("thinking", ""))
+                    chunk = delta.get("thinking", "")
+                    thinking.append(chunk)
+                    if chunk and on_thinking:
+                        on_thinking(chunk)
             elif etype == "message_delta":
                 stop_reason = (ev.get("delta") or {}).get("stop_reason") or stop_reason
                 usage.update(ev.get("usage") or {})

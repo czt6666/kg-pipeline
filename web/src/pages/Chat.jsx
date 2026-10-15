@@ -7,7 +7,8 @@ import { mergeKey, mergeLabel } from "../utils/merged.js";
 /* 问答：TCM 智慧诊疗 Agent Loop 的对话界面。前端无状态——每轮把完整消息历史 POST 给
    /api/kg/agent/chat/stream，KG 服务跑一轮单控制器 ReAct 循环（控制器每步决定 检索/追问/回答/转诊，
    检索结果喂回继续，可多轮下钻）。一轮可能要好几分钟，所以走 SSE 流式返回：每完成一步推送一个
-   step 事件（推理时间线实时增长），回答正文按 delta 事件边生成边显示，最后 done 事件带完整的
+   step 事件（推理时间线实时增长），模型每次调用的思考过程按 thinking 事件实时显示在气泡里，
+   回答正文按 delta 事件边生成边显示，最后 done 事件带完整的
    {action, reply, candidates, evidence, trace}。推理时间线默认展开——"检索过程对用户可见"是
    硬要求，不是可选的调试功能。 */
 
@@ -89,8 +90,11 @@ function stepMarkdown(step) {
   }
 }
 
-// 流式进行中、正文还没开始时，气泡里显示"现在在做哪一步"。
-function streamHint(trace) {
+// 流式进行中、正文还没开始时，气泡里显示"现在在做哪一步"；模型正在思考时下面再实时显示思考内容。
+const THINKING_LABEL = { controller: "决定下一步", answer: "组织回答", escalate: "评估风险" };
+
+function streamHint(trace, thinking) {
+  if (thinking) return `思考中：${THINKING_LABEL[thinking.stage] || thinking.stage}…`;
   const last = trace?.[trace.length - 1];
   if (!last) return "理解问题中…";
   if (last.stage === "controller" && last.output?.action === "retrieve") return "检索知识图谱中…";
@@ -173,9 +177,15 @@ export function Chat() {
         merge: selected.merge,
       }, (event, data) => {
         if (event === "step") {
-          patchLast(last => ({ ...last, trace: [...(last.trace || []), data] }));
+          // 一步完成，这一步的思考就结束了，清掉实时思考框。
+          patchLast(last => ({ ...last, thinking: null, trace: [...(last.trace || []), data] }));
+        } else if (event === "thinking") {
+          patchLast(last => ({ ...last, thinking: {
+            stage: data.stage,
+            text: (last.thinking?.stage === data.stage ? last.thinking.text : "") + data.text,
+          } }));
         } else if (event === "delta") {
-          patchLast(last => ({ ...last, content: last.content + data.text }));
+          patchLast(last => ({ ...last, thinking: null, content: last.content + data.text }));
         } else if (event === "done") {
           finished = true;
           patchLast(() => ({ role: "assistant", content: data.reply, action: data.action,
@@ -233,7 +243,10 @@ export function Chat() {
                     )}
                     <div className={"bubble" + (m.error ? " error" : "")}>
                       {m.streaming && !m.content
-                        ? <span className="loading-row"><span className="spinner" />{streamHint(m.trace)}</span>
+                        ? <>
+                            <span className="loading-row"><span className="spinner" />{streamHint(m.trace, m.thinking)}</span>
+                            {m.thinking?.text && <div className="thinking-live">{m.thinking.text.slice(-800)}</div>}
+                          </>
                         : m.role === "assistant" && !m.error ? <Markdown>{m.content}</Markdown> : m.content}
                     </div>
                     {m.role === "assistant" && m.candidates?.length > 0 && (
